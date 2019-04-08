@@ -1,12 +1,13 @@
 {
-    "name": "friendsofsymfony/elastica-bundle",
+    "name": "FOS-Greghubs/elastica-bundle",
     "type": "symfony-bundle",
-    "description": "Elasticsearch PHP integration for your Symfony project using Elastica",
+    "description": "Fork of FosElasticaBundle - Elasticsearch PHP integration for your Symfony project using Elastica - for added functionalities see README",
     "keywords": ["doctrine2", "elastica", "elasticsearch", "mongodb", "search"],
-    "homepage": "https://github.com/FriendsOfSymfony/FOSElasticaBundle",
+    "homepage": "https://github.com/GregHubs/FOSElasticaBundle",
     "license": "MIT",
     "authors": [
-        { "name": "FriendsOfSymfony Community", "homepage": "https://github.com/FriendsOfSymfony/FOSElasticaBundle/contributors" },
+        { "name": "GregHubs", "homepage": "https://github.com/GregHubs" },
+        { "name": "Greg Pons", "email": "ponsgregory@gmail.com" },
         { "name": "Tim Nagel", "email": "tim@nagel.com.au" },
         { "name": "Richard Miller", "email": "richard.miller@limethinking.co.uk" },
         { "name": "Jeremy Mikola", "email": "jmikola@gmail.com" }
