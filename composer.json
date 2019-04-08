@@ -1,5 +1,5 @@
 {
-    "name": "fos-greghubs/elastica-bundle",
+    "name": "fos-gregooz/elastica-bundle",
     "type": "symfony-bundle",
     "description": "Fork of FosElasticaBundle - Elasticsearch PHP integration for your Symfony project using Elastica - for added functionalities see README",
     "keywords": ["doctrine2", "elastica", "elasticsearch", "mongodb", "search"],
