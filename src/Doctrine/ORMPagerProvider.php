@@ -81,15 +81,10 @@ final class ORMPagerProvider implements PagerProviderInterface
             $qb->getRootAliases();
 
             if(isset($options['id'])){
-                $qb->getRootAliases();
-                $qb->andWhere('a.id = :id')
-                    ->setParameter('id', $options['id']);
-            }
 
-            if(isset($options['ids'])){
                 $qb->getRootAliases();
-                $qb->andWhere('a.id IN (:ids)')
-                    ->setParameter('ids', $options['ids']);
+                $qb->andWhere('a.id IN (:id)')
+                    ->setParameter('ids', $options['id']);
             }
 
             /** @var From[] $fromClauses */

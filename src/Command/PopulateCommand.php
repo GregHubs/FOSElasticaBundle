@@ -92,8 +92,7 @@ class PopulateCommand extends Command
             ->setName('fos:elastica:populate')
             ->addOption('index', null, InputOption::VALUE_OPTIONAL, 'The index to repopulate')
             ->addOption('type', null, InputOption::VALUE_OPTIONAL, 'The type to repopulate')
-            ->addOption('id', null, InputOption::VALUE_OPTIONAL, 'The id of the type to populate')
-            ->addOption('ids', null, InputOption::VALUE_OPTIONAL, 'The ids of the type to populate')
+            ->addOption('id', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The ids of the type to populate')
             ->addOption('no-reset', null, InputOption::VALUE_NONE, 'Do not reset index before populating')
             ->addOption('no-delete', null, InputOption::VALUE_NONE, 'Do not delete index after populate')
             ->addOption('sleep', null, InputOption::VALUE_REQUIRED, 'Sleep time between persisting iterations (microseconds)', 0)
@@ -126,7 +125,6 @@ class PopulateCommand extends Command
         $index = $input->getOption('index');
         $type = $input->getOption('type');
         $id = $input->getOption('id');
-        $ids = $input->getOption('ids');
 
         $reset = !$input->getOption('no-reset');
         $delete = !$input->getOption('no-delete');
@@ -139,7 +137,6 @@ class PopulateCommand extends Command
             'first_page' => $input->getOption('first-page'),
             'max_per_page' => $input->getOption('max-per-page'),
             'id' => $id,
-            'ids' => $ids,
         ];
 
         if ($input->getOption('last-page')) {
