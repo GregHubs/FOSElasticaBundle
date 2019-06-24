@@ -40,11 +40,11 @@ class Listener
     public $scheduledForUpdate = [];
 
     /**
-     * IDs of objects scheduled for removal.
+     * IDs of objects scheduled for removal by their routing id or 0 if none.
      *
      * @var array
      */
-    public $scheduledForDeletion = [];
+    public $scheduledForDeletionByRouting = [];
     /**
      * Object persister.
      *
@@ -208,9 +208,14 @@ class Listener
                 $this->objectPersister->replaceMany($this->scheduledForUpdate);
                 $this->scheduledForUpdate = [];
             }
-            if (count($this->scheduledForDeletion)) {
-                $this->objectPersister->deleteManyByIdentifiers($this->scheduledForDeletion);
-                $this->scheduledForDeletion = [];
+            if (count($this->scheduledForDeletionByRouting)) {
+                foreach ($this->scheduledForDeletionByRouting as $routing => $ids) {
+                    if ($routing === 0) {
+                        $routing = false;
+                    }
+                    $this->objectPersister->deleteManyByIdentifiers($ids, $routing);
+                }
+                $this->scheduledForDeletionByRouting = [];
             }
         }
     }
@@ -222,9 +227,23 @@ class Listener
      */
     private function scheduleForDeletion($object)
     {
-        if ($identifierValue = $this->propertyAccessor->getValue($object, $this->config['identifier'])) {
-            $this->scheduledForDeletion[] = !is_scalar($identifierValue) ? (string) $identifierValue : $identifierValue;
+        $document = $this->objectPersister->transformToElasticaDocument($object)->toArray();
+        $id = isset($document['_id']) ? $document['_id'] : null;
+        $parentId = isset($document['_parent']) ? $document['_parent'] : null;
+        $routingId = isset($document['_routing']) ? $document['_routing'] : null;
+        if ($id === null) {
+            return;
         }
+        $routing = 0;
+        if ($parentId !== null) {
+            $routing = $parentId;
+        } else if ($routingId !== null) {
+            $routing = $routingId;
+        }
+        if (!isset($this->scheduledForDeletionByRouting[$routing])) {
+            $this->scheduledForDeletionByRouting[$routing] = [];
+        }
+        $this->scheduledForDeletionByRouting[$routing][] = $id;
     }
 
     /**
