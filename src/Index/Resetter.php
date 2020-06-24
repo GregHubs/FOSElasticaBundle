@@ -134,9 +134,7 @@ class Resetter implements ResetterInterface
     public function resetIndexType($indexName, $typeName)
     {
         $typeConfig = $this->configManager->getTypeConfiguration($indexName, $typeName);
-
-        $this->resetIndex($indexName, true);
-
+        
         $index = $this->indexManager->getIndex($indexName);
         $type = $index->getType($typeName);
 
