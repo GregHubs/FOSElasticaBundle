@@ -78,6 +78,12 @@ final class ORMPagerProvider implements PagerProviderInterface
             // This side-effect allows us to be sure to get only From objects in the next call.
             $qb->getRootAliases();
 
+            if(!empty($options['id'])){
+                $qb->getRootAliases();
+                $qb->andWhere('a.id IN (:id)')
+                    ->setParameter('id', $options['id']);
+            }
+
             /** @var From[] $fromClauses */
             $fromClauses = $qb->getDQLPart('from');
 

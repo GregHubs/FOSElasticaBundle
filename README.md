@@ -1,7 +1,17 @@
 FOSElasticaBundle
 =================
 
-This bundle provides integration with [Elasticsearch](http://www.elasticsearch.org) and [Elastica](https://github.com/ruflin/Elastica) with
+This bundle is a fork from FOSElasticaBundle (5.0.3), with extended functionalities.
+
+New features
+------------
+- --id option added to allow the populate of a single object. The type and index are mantadory parameters.
+
+
+About the original bundle
+-------------------------
+
+It provides integration with [Elasticsearch](http://www.elasticsearch.org) and [Elastica](https://github.com/ruflin/Elastica) with
 Symfony. Features include:
 
 - Integrates the Elastica library into a Symfony environment
