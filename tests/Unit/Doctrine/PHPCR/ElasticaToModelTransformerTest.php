@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,10 +12,10 @@
 namespace FOS\ElasticaBundle\Tests\Unit\Doctrine\PHPCR;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ManagerRegistry;
-use FOS\ElasticaBundle\Doctrine\PHPCR\ElasticaToModelTransformer;
 use Doctrine\ODM\PHPCR\DocumentManager;
 use Doctrine\ODM\PHPCR\DocumentRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use FOS\ElasticaBundle\Doctrine\PHPCR\ElasticaToModelTransformer;
 use PHPUnit\Framework\TestCase;
 
 class ElasticaToModelTransformerTest extends TestCase
@@ -37,9 +37,9 @@ class ElasticaToModelTransformerTest extends TestCase
 
     protected $objectClass = 'stdClass';
 
-    protected function setUp()
+    protected function setUp(): void
     {
-        if (!class_exists(DocumentManager::class)) {
+        if (!\class_exists(DocumentManager::class)) {
             $this->markTestSkipped('Doctrine PHPCR is not present');
         }
 
@@ -53,7 +53,7 @@ class ElasticaToModelTransformerTest extends TestCase
         $this->repository = $this
             ->getMockBuilder(DocumentRepository::class)
             ->disableOriginalConstructor()
-            ->setMethods(array(
+            ->setMethods([
                 'customQueryBuilderCreator',
                 'createQueryBuilder',
                 'find',
@@ -61,8 +61,8 @@ class ElasticaToModelTransformerTest extends TestCase
                 'findBy',
                 'findOneBy',
                 'getClassName',
-                'findMany'
-            ))->getMock();
+                'findMany',
+            ])->getMock();
 
         $this->repository->expects($this->any())
             ->method('findMany')

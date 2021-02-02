@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,7 @@
 namespace FOS\ElasticaBundle\Persister;
 
 use Elastica\Document;
-use Elastica\Type;
+use Elastica\Index;
 use FOS\ElasticaBundle\Transformer\ModelToElasticaTransformerInterface;
 
 /**
@@ -27,14 +27,11 @@ class ObjectSerializerPersister extends ObjectPersister
     protected $serializer;
 
     /**
-     * @param Type                                $type
-     * @param ModelToElasticaTransformerInterface $transformer
-     * @param string                              $objectClass
-     * @param callable                            $serializer
+     * @param callable $serializer
      */
-    public function __construct(Type $type, ModelToElasticaTransformerInterface $transformer, $objectClass, $serializer, array $options = [])
+    public function __construct(Index $index, ModelToElasticaTransformerInterface $transformer, string $objectClass, $serializer, array $options = [])
     {
-        parent::__construct($type, $transformer, $objectClass, [], $options);
+        parent::__construct($index, $transformer, $objectClass, [], $options);
 
         $this->serializer = $serializer;
     }
@@ -42,16 +39,12 @@ class ObjectSerializerPersister extends ObjectPersister
     /**
      * Transforms an object to an elastica document
      * with just the identifier set.
-     *
-     * @param object $object
-     *
-     * @return Document the elastica document
      */
-    public function transformToElasticaDocument($object)
+    public function transformToElasticaDocument(object $object): Document
     {
         $document = $this->transformer->transform($object, []);
 
-        $data = call_user_func($this->serializer, $object);
+        $data = \call_user_func($this->serializer, $object);
         $document->setData($data);
 
         return $document;

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -31,6 +31,6 @@ class TypeObject
 
     public function getSerializableColl()
     {
-        return iterator_to_array($this->coll, false);
+        return \iterator_to_array($this->coll, false);
     }
 }

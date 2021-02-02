@@ -1,8 +1,8 @@
 Manual pager provider
 ====================
 
-Create a service with the tag "fos_elastica.pager_provider" and attributes for the
-index and type for which the service will provide.
+Create a service with the tag "fos_elastica.pager_provider" and attribute "index" for the
+index for which the service will provide.
 
 ```yaml
 # app/config/config.yml
@@ -10,7 +10,7 @@ services:
     acme.search_provider.user:
         class: Acme\UserBundle\Provider\UserPagerProvider
         tags:
-            - { name: fos_elastica.pager_provider, index: app, type: user }
+            - { name: fos_elastica.pager_provider, index: user }
 ```
 
 Its class must implement `FOS\ElasticaBundle\Provider\PagerProviderInterface`.
@@ -26,7 +26,7 @@ use Pagerfanta\Adapter\ArrayAdapter;
 
 class UserPagerProvider implements PagerProviderInterface
 {
-    public function provide(array $options = array())
+    public function provide(array $options = [])
     {
         return new PagerfantaPager(new Pagerfanta(new ArrayAdapter([ /* an array of objects */ ])));
     }

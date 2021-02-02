@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,9 +27,9 @@ class HybridPaginatorAdapter extends RawPaginatorAdapter
      * @param Query                               $query       the query to search
      * @param ElasticaToModelTransformerInterface $transformer the transformer for fetching the results
      */
-    public function __construct(SearchableInterface $searchable, Query $query, ElasticaToModelTransformerInterface $transformer)
+    public function __construct(SearchableInterface $searchable, Query $query, array $options, ElasticaToModelTransformerInterface $transformer)
     {
-        parent::__construct($searchable, $query);
+        parent::__construct($searchable, $query, $options);
 
         $this->transformer = $transformer;
     }

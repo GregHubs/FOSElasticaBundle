@@ -28,18 +28,16 @@ fos_elastica:
     clients:
         default: { host: localhost, port: 9200 }
     indexes:
-        app:
+        user:
             client: default
-            types:
-                user:
-                    properties:
-                        # your properties
-                    persistence:
-                        driver: orm
-                        model: Application\UserBundle\Entity\User
-                        provider: ~
-                        finder: ~
-                        repository: Acme\ElasticaBundle\SearchRepository\UserRepository
+            persistence:
+                driver: orm
+                model: Application\UserBundle\Entity\User
+                provider: ~
+                finder: ~
+                repository: Acme\ElasticaBundle\SearchRepository\UserRepository
+            properties:
+                # your properties
 ```
 
 Then the custom queries will be available when using the repository returned from the manager:

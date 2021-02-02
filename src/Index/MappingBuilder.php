@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,46 +13,48 @@ namespace FOS\ElasticaBundle\Index;
 
 use FOS\ElasticaBundle\Configuration\IndexConfigInterface;
 use FOS\ElasticaBundle\Configuration\IndexTemplateConfig;
-use FOS\ElasticaBundle\Configuration\TypeConfig;
+use FOS\ElasticaBundle\Event\PostIndexMappingBuildEvent;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class MappingBuilder
 {
     /**
-     * Builds mappings for an entire index.
-     *
-     * @param IndexConfigInterface $indexConfig
-     *
-     * @return array
+     * @var EventDispatcherInterface
      */
-    public function buildIndexMapping(IndexConfigInterface $indexConfig)
+    private $dispatcher;
+
+    public function __construct(EventDispatcherInterface $eventDispatcher)
     {
-        $typeMappings = [];
-        foreach ($indexConfig->getTypes() as $typeConfig) {
-            $typeMappings[$typeConfig->getName()] = $this->buildTypeMapping($typeConfig);
-        }
+        $this->dispatcher = $eventDispatcher;
+    }
 
-        $mapping = [];
-        if (!empty($typeMappings)) {
-            $mapping['mappings'] = $typeMappings;
-        }
-        // 'warmers' => $indexConfig->getWarmers(),
+    /**
+     * Builds mappings for an entire index.
+     */
+    public function buildIndexMapping(IndexConfigInterface $indexConfig): array
+    {
+        $mappingIndex = [];
+        $mapping = $this->buildMapping($indexConfig->getModel(), $indexConfig);
+        $this->dispatcher->dispatch($event = new PostIndexMappingBuildEvent($indexConfig, $mapping));
 
+        $mapping = $event->getMapping();
         $settings = $indexConfig->getSettings();
-        if (!empty($settings)) {
-            $mapping['settings'] = $settings;
+
+        if ($mapping) {
+            $mappingIndex['mappings'] = $mapping;
         }
 
-        return $mapping;
+        if ($settings) {
+            $mappingIndex['settings'] = $settings;
+        }
+
+        return $mappingIndex;
     }
 
     /**
      * Builds mappings for an entire index template.
-     *
-     * @param IndexTemplateConfig $indexTemplateConfig
-     *
-     * @return array
      */
-    public function buildIndexTemplateMapping(IndexTemplateConfig $indexTemplateConfig)
+    public function buildIndexTemplateMapping(IndexTemplateConfig $indexTemplateConfig): array
     {
         $mapping = $this->buildIndexMapping($indexTemplateConfig);
         $mapping['template'] = $indexTemplateConfig->getTemplate();
@@ -62,36 +64,32 @@ class MappingBuilder
 
     /**
      * Builds mappings for a single type.
-     *
-     * @param TypeConfig $typeConfig
-     *
-     * @return array
      */
-    public function buildTypeMapping(TypeConfig $typeConfig)
+    public function buildMapping(?string $model, IndexConfigInterface $indexConfig): array
     {
-        $mapping = $typeConfig->getMapping();
+        $mapping = $indexConfig->getMapping();
 
-        if (null !== $typeConfig->getDynamicDateFormats()) {
-            $mapping['dynamic_date_formats'] = $typeConfig->getDynamicDateFormats();
+        if (null !== $indexConfig->getDynamicDateFormats()) {
+            $mapping['dynamic_date_formats'] = $indexConfig->getDynamicDateFormats();
         }
 
-        if (null !== $typeConfig->getDateDetection()) {
-            $mapping['date_detection'] = $typeConfig->getDateDetection();
+        if (null !== $indexConfig->getDateDetection()) {
+            $mapping['date_detection'] = $indexConfig->getDateDetection();
         }
 
-        if (null !== $typeConfig->getNumericDetection()) {
-            $mapping['numeric_detection'] = $typeConfig->getNumericDetection();
+        if (null !== $indexConfig->getNumericDetection()) {
+            $mapping['numeric_detection'] = $indexConfig->getNumericDetection();
         }
 
-        if ($typeConfig->getAnalyzer()) {
-            $mapping['analyzer'] = $typeConfig->getAnalyzer();
+        if ($indexConfig->getAnalyzer()) {
+            $mapping['analyzer'] = $indexConfig->getAnalyzer();
         }
 
-        if (null !== $typeConfig->getDynamic()) {
-            $mapping['dynamic'] = $typeConfig->getDynamic();
+        if (null !== $indexConfig->getDynamic()) {
+            $mapping['dynamic'] = $indexConfig->getDynamic();
         }
 
-        if (isset($mapping['dynamic_templates']) and empty($mapping['dynamic_templates'])) {
+        if (isset($mapping['dynamic_templates']) && !$mapping['dynamic_templates']) {
             unset($mapping['dynamic_templates']);
         }
 
@@ -100,15 +98,8 @@ class MappingBuilder
             unset($mapping['properties']);
         }
 
-        if ($typeConfig->getModel()) {
-            $mapping['_meta']['model'] = $typeConfig->getModel();
-        }
-
-        unset($mapping['_parent']['identifier'], $mapping['_parent']['property']);
-
-        if (empty($mapping)) {
-            // Empty mapping, we want it encoded as a {} instead of a []
-            $mapping = new \ArrayObject();
+        if ($model) {
+            $mapping['_meta']['model'] = $model;
         }
 
         return $mapping;
@@ -117,17 +108,13 @@ class MappingBuilder
     /**
      * Fixes any properties and applies basic defaults for any field that does not have
      * required options.
-     *
-     * @param $properties
      */
-    private function fixProperties(&$properties)
+    private function fixProperties(array &$properties): void
     {
         foreach ($properties as $name => &$property) {
             unset($property['property_path']);
+            $property['type'] = $property['type'] ?? 'text';
 
-            if (!isset($property['type'])) {
-                $property['type'] = 'text';
-            }
             if (isset($property['fields'])) {
                 $this->fixProperties($property['fields']);
             }

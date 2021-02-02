@@ -1,9 +1,19 @@
 <?php
+
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Persister\Event;
 
 use FOS\ElasticaBundle\Persister\ObjectPersisterInterface;
 use FOS\ElasticaBundle\Provider\PagerInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 final class OnExceptionEvent extends Event implements PersistEvent
 {
@@ -35,84 +45,58 @@ final class OnExceptionEvent extends Event implements PersistEvent
     /**
      * @var bool
      */
-    private $ignore;
+    private $ignored = false;
 
     public function __construct(
-        PagerInterface $pager, 
-        ObjectPersisterInterface $objectPersister, 
-        \Exception $exception, 
-        array $objects, 
+        PagerInterface $pager,
+        ObjectPersisterInterface $objectPersister,
+        \Exception $exception,
+        array $objects,
         array $options
     ) {
         $this->pager = $pager;
         $this->objectPersister = $objectPersister;
         $this->exception = $exception;
         $this->options = $options;
-
-        $this->ignore = false;
         $this->objects = $objects;
     }
 
-    /**
-     * @return PagerInterface
-     */
-    public function getPager()
+    public function getPager(): PagerInterface
     {
         return $this->pager;
     }
 
-    /**
-     * @return array
-     */
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
 
-    /**
-     * @return ObjectPersisterInterface
-     */
-    public function getObjectPersister()
+    public function getObjectPersister(): ObjectPersisterInterface
     {
         return $this->objectPersister;
     }
 
-    /**
-     * @return \Exception
-     */
-    public function getException()
+    public function getException(): \Exception
     {
         return $this->exception;
     }
 
-    /**
-     * @param \Exception $exception
-     */
     public function setException(\Exception $exception)
     {
         $this->exception = $exception;
     }
 
-    /**
-     * @return bool
-     */
-    public function isIgnored()
+    public function isIgnored(): bool
     {
-        return $this->ignore;
+        return $this->ignored;
     }
 
-    /**
-     * @param bool $ignore
-     */
-    public function setIgnore($ignore)
+    public function setIgnored(bool $ignored)
     {
-        $this->ignore = !!$ignore;
+        $this->ignored = $ignored;
     }
 
-    /**
-     * @return array
-     */
-    public function getObjects()
+    public function getObjects(): array
     {
         return $this->objects;
     }

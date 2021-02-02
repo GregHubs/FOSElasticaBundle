@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,9 +15,9 @@ use FOS\ElasticaBundle\Tests\Unit\Doctrine\ListenerTest as BaseListenerTest;
 
 class ListenerTest extends BaseListenerTest
 {
-    protected function setUp()
+    protected function setUp(): void
     {
-        if (!class_exists(\Doctrine\ODM\PHPCR\DocumentManager::class)) {
+        if (!\class_exists(\Doctrine\ODM\PHPCR\DocumentManager::class)) {
             $this->markTestSkipped('Doctrine PHPCR is not present');
         }
     }
@@ -29,7 +29,7 @@ class ListenerTest extends BaseListenerTest
 
     protected function getLifecycleEventArgsClass()
     {
-        return \Doctrine\Common\Persistence\Event\LifecycleEventArgs::class;
+        return \Doctrine\Persistence\Event\LifecycleEventArgs::class;
     }
 
     protected function getListenerClass()

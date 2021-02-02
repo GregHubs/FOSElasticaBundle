@@ -1,10 +1,19 @@
 <?php
 
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Tests\Unit\Doctrine;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\ODM\MongoDB\DocumentRepository;
 use Doctrine\ODM\MongoDB\Query\Builder;
+use Doctrine\ODM\MongoDB\Repository\DocumentRepository;
 use FOS\ElasticaBundle\Doctrine\MongoDBPagerProvider;
 use FOS\ElasticaBundle\Doctrine\RegisterListenersService;
 use FOS\ElasticaBundle\Provider\PagerfantaPager;
@@ -17,9 +26,9 @@ use Symfony\Bridge\Doctrine\ManagerRegistry;
 
 class MongoDBPagerProviderTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
-        if (!class_exists(DocumentManager::class)) {
+        if (!\class_exists(DocumentManager::class)) {
             $this->markTestSkipped('Doctrine MongoDB ODM is not available.');
         }
     }
@@ -60,7 +69,6 @@ class MongoDBPagerProviderTest extends TestCase
             ->with($objectClass)
             ->willReturn($repository);
 
-
         $doctrine = $this->createDoctrineMock();
         $doctrine
             ->expects($this->once())
@@ -76,8 +84,7 @@ class MongoDBPagerProviderTest extends TestCase
 
         $adapter = $pager->getPagerfanta()->getAdapter();
         $this->assertInstanceOf(DoctrineODMMongoDBAdapter::class, $adapter);
-
-        $this->assertAttributeSame($expectedBuilder, 'queryBuilder', $adapter);
+        $this->assertSame($expectedBuilder, $adapter->getQueryBuilder());
     }
 
     public function testShouldAllowCallCustomRepositoryMethod()
@@ -127,7 +134,6 @@ class MongoDBPagerProviderTest extends TestCase
             ->method('getRepository')
             ->willReturn($repository);
 
-
         $doctrine = $this->createDoctrineMock();
         $doctrine
             ->expects($this->once())
@@ -141,7 +147,7 @@ class MongoDBPagerProviderTest extends TestCase
             ->with($this->identicalTo($manager), $this->isInstanceOf(PagerInterface::class), $baseConfig)
         ;
 
-        $provider = new MongoDBPagerProvider($doctrine,$registerListenersMock, $objectClass, $baseConfig);
+        $provider = new MongoDBPagerProvider($doctrine, $registerListenersMock, $objectClass, $baseConfig);
 
         $provider->provide();
     }

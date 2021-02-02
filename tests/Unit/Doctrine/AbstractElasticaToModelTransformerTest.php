@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,7 +11,7 @@
 
 namespace FOS\ElasticaBundle\Tests\Unit\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Elastica\Result;
 use FOS\ElasticaBundle\Doctrine\AbstractElasticaToModelTransformer;
 use FOS\ElasticaBundle\Doctrine\ORM\ElasticaToModelTransformer;
@@ -33,7 +33,7 @@ class AbstractElasticaToModelTransformerTest extends TestCase
      */
     protected $objectClass = 'stdClass';
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->registry = $this->createMock(ManagerRegistry::class);
     }
@@ -166,7 +166,7 @@ class AbstractElasticaToModelTransformerTest extends TestCase
         $results = $transformer->transform($elasticaResults);
 
         foreach ($results as $result) {
-            $this->assertInternalType('array', $result->highlights);
+            $this->assertIsArray($result->highlights);
             $this->assertNotEmpty($result->highlights);
         }
     }
@@ -176,7 +176,7 @@ class AbstractElasticaToModelTransformerTest extends TestCase
      */
     public function testResultsAreSortedByIdentifier($elasticaResults, $doctrineObjects)
     {
-        rsort($doctrineObjects);
+        \rsort($doctrineObjects);
 
         $transformer = $this->createMockTransformer();
 

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -24,9 +24,6 @@ class Repository
     /** @var PaginatedFinderInterface */
     protected $finder;
 
-    /**
-     * @param PaginatedFinderInterface $finder
-     */
     public function __construct(PaginatedFinderInterface $finder)
     {
         $this->finder = $finder;
@@ -34,46 +31,40 @@ class Repository
 
     /**
      * @param mixed $query
-     * @param int   $limit
-     * @param array $options
      *
      * @return array
      */
-    public function find($query, $limit = null, $options = [])
+    public function find($query, ?int $limit = null, array $options = [])
     {
         return $this->finder->find($query, $limit, $options);
     }
 
     /**
      * @param mixed $query
-     * @param int   $limit
-     * @param array $options
      *
      * @return mixed
      */
-    public function findHybrid($query, $limit = null, $options = [])
+    public function findHybrid($query, ?int $limit = null, array $options = [])
     {
         return $this->finder->findHybrid($query, $limit, $options);
     }
 
     /**
      * @param mixed $query
-     * @param array $options
      *
      * @return \Pagerfanta\Pagerfanta
      */
-    public function findPaginated($query, $options = [])
+    public function findPaginated($query, array $options = [])
     {
         return $this->finder->findPaginated($query, $options);
     }
 
     /**
-     * @param string $query
-     * @param array  $options
+     * @param mixed $query
      *
      * @return Paginator\PaginatorAdapterInterface
      */
-    public function createPaginatorAdapter($query, $options = [])
+    public function createPaginatorAdapter($query, array $options = [])
     {
         return $this->finder->createPaginatorAdapter($query, $options);
     }
@@ -83,8 +74,8 @@ class Repository
      *
      * @return Paginator\HybridPaginatorAdapter
      */
-    public function createHybridPaginatorAdapter($query)
+    public function createHybridPaginatorAdapter($query, array $options = [])
     {
-        return $this->finder->createHybridPaginatorAdapter($query);
+        return $this->finder->createHybridPaginatorAdapter($query, $options);
     }
 }

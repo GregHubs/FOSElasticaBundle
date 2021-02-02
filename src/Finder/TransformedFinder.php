@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -35,10 +35,6 @@ class TransformedFinder implements PaginatedFinderInterface
      */
     protected $transformer;
 
-    /**
-     * @param SearchableInterface                 $searchable
-     * @param ElasticaToModelTransformerInterface $transformer
-     */
     public function __construct(SearchableInterface $searchable, ElasticaToModelTransformerInterface $transformer)
     {
         $this->searchable = $searchable;
@@ -48,7 +44,7 @@ class TransformedFinder implements PaginatedFinderInterface
     /**
      * {@inheritdoc}
      */
-    public function find($query, $limit = null, $options = [])
+    public function find($query, ?int $limit = null, array $options = [])
     {
         $results = $this->search($query, $limit, $options);
 
@@ -57,12 +53,10 @@ class TransformedFinder implements PaginatedFinderInterface
 
     /**
      * @param $query
-     * @param null|int $limit
-     * @param array    $options
      *
      * @return array
      */
-    public function findHybrid($query, $limit = null, $options = [])
+    public function findHybrid($query, ?int $limit = null, array $options = [])
     {
         $results = $this->search($query, $limit, $options);
 
@@ -70,12 +64,33 @@ class TransformedFinder implements PaginatedFinderInterface
     }
 
     /**
+     * @param $query
+     */
+    public function findRaw($query, ?int $limit = null, array $options = []): array
+    {
+        return $this->search($query, $limit, $options);
+    }
+
+    /**
      * {@inheritdoc}
      */
-    public function findPaginated($query, $options = [])
+    public function findPaginated($query, array $options = [])
     {
-        $queryObject = Query::create($query);
-        $paginatorAdapter = $this->createPaginatorAdapter($queryObject, $options);
+        $paginatorAdapter = $this->createPaginatorAdapter($query, $options);
+
+        return new Pagerfanta(new FantaPaginatorAdapter($paginatorAdapter));
+    }
+
+    /**
+     * Searches for query hybrid results and returns them wrapped in a paginator.
+     *
+     * @param mixed $query Can be a string, an array or an \Elastica\Query object
+     *
+     * @return Pagerfanta paginated hybrid results
+     */
+    public function findHybridPaginated($query, array $options = [])
+    {
+        $paginatorAdapter = $this->createHybridPaginatorAdapter($query, $options);
 
         return new Pagerfanta(new FantaPaginatorAdapter($paginatorAdapter));
     }
@@ -83,7 +98,7 @@ class TransformedFinder implements PaginatedFinderInterface
     /**
      * {@inheritdoc}
      */
-    public function createPaginatorAdapter($query, $options = [])
+    public function createPaginatorAdapter($query, array $options = [])
     {
         $query = Query::create($query);
 
@@ -93,17 +108,17 @@ class TransformedFinder implements PaginatedFinderInterface
     /**
      * {@inheritdoc}
      */
-    public function createHybridPaginatorAdapter($query)
+    public function createHybridPaginatorAdapter($query, array $options = [])
     {
         $query = Query::create($query);
 
-        return new HybridPaginatorAdapter($this->searchable, $query, $this->transformer);
+        return new HybridPaginatorAdapter($this->searchable, $query, $options, $this->transformer);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createRawPaginatorAdapter($query, $options = [])
+    public function createRawPaginatorAdapter($query, array $options = [])
     {
         $query = Query::create($query);
 
@@ -112,12 +127,10 @@ class TransformedFinder implements PaginatedFinderInterface
 
     /**
      * @param $query
-     * @param null|int $limit
-     * @param array    $options
      *
      * @return array
      */
-    protected function search($query, $limit = null, $options = [])
+    protected function search($query, ?int $limit = null, array $options = [])
     {
         $queryObject = Query::create($query);
         if (null !== $limit) {

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,17 +25,11 @@ class PaginateElasticaQuerySubscriber implements EventSubscriberInterface
      */
     private $requestStack;
 
-    /**
-     * @param RequestStack $requestStack
-     */
     public function __construct(RequestStack $requestStack)
     {
         $this->requestStack = $requestStack;
     }
 
-    /**
-     * @param ItemsEvent $event
-     */
     public function items(ItemsEvent $event)
     {
         if ($event->target instanceof PaginatorAdapterInterface) {
@@ -68,13 +62,12 @@ class PaginateElasticaQuerySubscriber implements EventSubscriberInterface
 
     /**
      * Adds knp paging sort to query.
-     *
-     * @param ItemsEvent $event
      */
     protected function setSorting(ItemsEvent $event)
     {
-        $options = $event->options;
-        $sortField = $this->getFromRequest($options['sortFieldParameterName']);
+        // Bugfix for PHP 7.4 as options can be null and generate a "Trying to access array offset on value of type null" error
+        $options = $event->options ?? [];
+        $sortField = $this->getFromRequest($options['sortFieldParameterName'] ?? null);
 
         if (!$sortField && isset($options['defaultSortFieldName'])) {
             $sortField = $options['defaultSortFieldName'];
@@ -94,7 +87,7 @@ class PaginateElasticaQuerySubscriber implements EventSubscriberInterface
         ];
 
         if (isset($options['sortNestedPath'])) {
-            $path = is_callable($options['sortNestedPath']) ?
+            $path = \is_callable($options['sortNestedPath']) ?
                 $options['sortNestedPath']($sortField) : $options['sortNestedPath'];
 
             if (!empty($path)) {
@@ -103,7 +96,7 @@ class PaginateElasticaQuerySubscriber implements EventSubscriberInterface
         }
 
         if (isset($options['sortNestedFilter'])) {
-            $filter = is_callable($options['sortNestedFilter']) ?
+            $filter = \is_callable($options['sortNestedFilter']) ?
                 $options['sortNestedFilter']($sortField) : $options['sortNestedFilter'];
 
             if (!empty($filter)) {
@@ -123,33 +116,29 @@ class PaginateElasticaQuerySubscriber implements EventSubscriberInterface
             $sortDirection = $options['defaultSortDirection'];
         }
 
-        if ('desc' === strtolower($sortDirection)) {
+        if ('desc' === \strtolower($sortDirection)) {
             $dir = 'desc';
         }
 
         // check if the requested sort field is in the sort whitelist
-        if (isset($options['sortFieldWhitelist']) && !in_array($sortField, $options['sortFieldWhitelist'])) {
-            throw new \UnexpectedValueException(sprintf('Cannot sort by: [%s] this field is not in whitelist', $sortField));
+        if (isset($options['sortFieldWhitelist']) && !\in_array($sortField, $options['sortFieldWhitelist'], true)) {
+            throw new \UnexpectedValueException(\sprintf('Cannot sort by: [%s] this field is not in whitelist', $sortField));
         }
 
         return $dir;
     }
 
-    /**
-     * @return Request|null
-     */
-    private function getRequest()
+    private function getRequest(): ?Request
     {
         return $this->requestStack->getCurrentRequest();
     }
 
     /**
-     * @param string|null $key
      * @return mixed|null
      */
     private function getFromRequest(?string $key)
     {
-        if (null !== $request = $this->getRequest()) {
+        if (null !== $key && null !== $request = $this->getRequest()) {
             return $request->get($key);
         }
 

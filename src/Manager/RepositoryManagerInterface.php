@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,24 +23,21 @@ use FOS\ElasticaBundle\Repository;
 interface RepositoryManagerInterface
 {
     /**
-     * Adds type name and its finder.
+     * Adds index name and its finder.
      * Custom repository class name can also be added.
-     *
-     * @param string $indexTypeName  The type name in "index/type" format
-     * @param        $finder
-     * @param string $repositoryName
      */
-    public function addType($indexTypeName, FinderInterface $finder, $repositoryName = null);
+    public function addIndex(string $indexName, FinderInterface $finder, ?string $repositoryName = null): void;
 
     /**
      * Return repository for entity.
      *
      * Returns custom repository if one specified otherwise
      * returns a basic repository.
-     *
-     * @param $typeName
-     *
-     * @return Repository
      */
-    public function getRepository($typeName);
+    public function getRepository(string $indexName): Repository;
+
+    /**
+     * Check whether a repository exists for the index.
+     */
+    public function hasRepository(string $indexName): bool;
 }

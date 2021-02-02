@@ -4,46 +4,73 @@ FOSElasticaBundle Usage
 Basic Searching with a Finder
 -----------------------------
 
-The most useful searching method is to use a finder defined by the type configuration.
+The most useful searching method is to use a finder defined by the index configuration.
 A finder will return results that have been hydrated by the configured persistence backend,
 allowing you to use relationships of returned entities. For more information about
-configuration options for this kind of searching, please see the [types](types.md)
+configuration options for this kind of searching, please see the [indexes](indexes.md)
 documentation.
 
-> This example assumes you have defined an index `app` and a type `user` in your `config.yml`.
+> This example assumes you have defined an index `user` in your `config.yml`.
+
+```yaml
+# config/services.yaml
+services:
+    # ...
+
+    App\Controller\UserController:
+        tags: ['controller.service_arguments']
+        public: true
+        arguments:
+            - '@fos_elastica.finder.user'
+```
 
 ```php
-$finder = $this->container->get('fos_elastica.finder.app.user');
+namespace App\Controller;
 
-// Option 1. Returns all users who have example.net in any of their mapped fields
-$results = $finder->find('example.net');
+use FOS\ElasticaBundle\Finder\PaginatedFinderInterface;
 
-// Option 2. Returns a set of hybrid results that contain all Elasticsearch results
-// and their transformed counterparts. Each result is an instance of a HybridResult
-$results = $finder->findHybrid('example.net');
+class UserController
+{
+    private $finder;
 
-// Option 3a. Pagerfanta'd resultset
-/** var Pagerfanta\Pagerfanta */
-$userPaginator = $finder->findPaginated('bob');
-$countOfResults = $userPaginator->getNbResults();
+    public function __construct(PaginatedFinderInterface $finder)
+    {
+        $this->finder = $finder;
+    }
 
-// Option 3b. KnpPaginator resultset
-$paginator = $this->get('knp_paginator');
-$results = $finder->createPaginatorAdapter('bob');
-$pagination = $paginator->paginate($results, $page, 10);
+    public function userAction()
+    {
+        // Option 1. Returns all users who have example.net in any of their mapped fields
+        $results = $this->finder->find('example.net');
 
-// You can specify additional options as the fourth parameter of Knp Paginator
-// paginate method to nested_filter and nested_sort
+        // Option 2. Returns a set of hybrid results that contain all Elasticsearch results
+        // and their transformed counterparts. Each result is an instance of a HybridResult
+        $results = $this->finder->findHybrid('example.net');
 
-$options = [
-    'sortNestedPath' => 'owner',
-    'sortNestedFilter' => new Query\Term(['enabled' => ['value' => true]]),
-];
+        // Option 3a. Pagerfanta'd resultset
+        /** var Pagerfanta\Pagerfanta */
+        $userPaginator = $this->finder->findPaginated('bob');
+        $countOfResults = $userPaginator->getNbResults();
 
-// sortNestedPath and sortNestedFilter also accepts a callable
-// which takes the current sort field to get the correct sort path/filter
+        // Option 3b. KnpPaginator resultset
+        $paginator = $this->get('knp_paginator');
+        $results = $this->finder->createPaginatorAdapter('bob');
+        $pagination = $paginator->paginate($results, $page, 10);
 
-$pagination = $paginator->paginate($results, $page, 10, $options);
+        // You can specify additional options as the fourth parameter of Knp Paginator
+        // paginate method to nested_filter and nested_sort
+
+        $options = [
+            'sortNestedPath' => 'owner',
+            'sortNestedFilter' => new Query\Term(['enabled' => ['value' => true]]),
+        ];
+
+        // sortNestedPath and sortNestedFilter also accepts a callable
+        // which takes the current sort field to get the correct sort path/filter
+
+        $pagination = $paginator->paginate($results, $page, 10, $options);
+    }
+}
 ```
 
 When searching with a finder, parameters can be passed which influence the Elasticsearch query in general.
@@ -52,7 +79,7 @@ For example, the `search_type` parameter (see [the Elasticsearch documentation](
 can be set as follows:
 
 ```php
-$results = $finder->findHybrid('example.net', null, ['search_type' => 'dfs_query_then_fetch']);
+$results = $this->finder->findHybrid('example.net', null, ['search_type' => 'dfs_query_then_fetch']);
 ```
 
 Aggregations
@@ -67,7 +94,7 @@ $agg = new \Elastica\Aggregation\Terms('tags');
 $agg->setField('companyGroup');
 $query->addAggregation($agg);
 
-$companies = $finder->findPaginated($query);
+$companies = $this->finder->findPaginated($query);
 $companies->setMaxPerPage($params['limit']);
 $companies->setCurrentPage($params['page']);
 
@@ -97,11 +124,11 @@ $finder = $this->container->get('fos_elastica.finder.app');
 $results = $finder->find('bob');
 ```
 
-Type Repositories
+Index Repositories
 -----------------
 
 In the case where you need many different methods for different searching terms, it
-may be better to separate methods for each type into their own dedicated repository
+may be better to separate methods for each index into their own dedicated repository
 classes, just like Doctrine ORM's EntityRepository classes.
 
 The manager class that handles repositories has a service key of `fos_elastica.manager`.
@@ -115,15 +142,41 @@ fos_elastica:
 
 An example for using a repository:
 
+```yaml
+# config/services.yaml
+services:
+    # ...
+
+    App\Controller\UserController:
+        tags: ['controller.service_arguments']
+        public: true
+        arguments:
+            - '@fos_elastica.manager'
+```
+
 ```php
-/** var FOS\ElasticaBundle\Manager\RepositoryManager */
-$repositoryManager = $this->container->get('fos_elastica.manager');
+namespace App\Controller;
 
-/** var FOS\ElasticaBundle\Repository */
-$repository = $repositoryManager->getRepository('UserBundle:User');
+use FOS\ElasticaBundle\Manager\RepositoryManagerInterface;
 
-/** var array of Acme\UserBundle\Entity\User */
-$users = $repository->find('bob');
+class UserController extends Controller
+{
+    /** @var RepositoryManagerInterface */
+    private $repositoryManager;
+
+    public function __construct(RepositoryManagerInterface $repositoryManager)
+    {
+        $this->repositoryManager = $repositoryManager;
+    }
+
+    public function userAction()
+    {
+        $repository = $this->repositoryManager->getRepository('UserBundle:User');
+
+        /** var array of App\UserBundle\Entity\User */
+        $users = $repository->find('bob');
+    }
+}
 ```
 
 For more information about customising repositories, see the cookbook entry
@@ -138,10 +191,12 @@ circumstances this is not ideal and you'd prefer to use a different method to jo
 any entity relations that are required on the page that will be displaying the results.
 
 ```yaml
-            user:
-                persistence:
-                    elastica_to_model_transformer:
-                        query_builder_method: createSearchQueryBuilder
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                elastica_to_model_transformer:
+                    query_builder_method: createSearchQueryBuilder
 ```
 
 An example for using a custom query builder method:
@@ -158,10 +213,10 @@ class UserRepository extends EntityRepository
     public function createSearchQueryBuilder($entityAlias)
     {
         $qb = $this->createQueryBuilder($entityAlias);
-        
+
         $qb->select($entityAlias, 'g')
             ->innerJoin($entityAlias.'.groups', 'g');
-            
+
         return $qb;
     }
 }
@@ -178,12 +233,12 @@ Results must match at least one specified `categoryIds`, and should match the
 `title` or `tags` criteria. Additionally, we define a snowball analyzer to
 apply to queries against the `title` field.
 
-Assuming a type is configured as follows:
+Assuming an index is configured as follows:
 
 ```yaml
 fos_elastica:
     indexes:
-        app:
+        article:
             settings:
                 index:
                     analysis:
@@ -191,17 +246,15 @@ fos_elastica:
                             my_analyzer:
                                 type: snowball
                                 language: English
-            types:
-                article:
-                    properties:
-                        title: { boost: 10, analyzer: my_analyzer }
-                        tags:
-                        categoryIds:
-                    persistence:
-                        driver: orm
-                        model: Acme\DemoBundle\Entity\Article
-                        provider: ~
-                        finder: ~
+            persistence:
+                driver: orm
+                model: Acme\DemoBundle\Entity\Article
+                provider: ~
+                finder: ~
+            properties:
+                title: { boost: 10, analyzer: my_analyzer }
+                tags:
+                categoryIds:
 ```
 
 The following code will execute a search against the Elasticsearch server:
@@ -216,12 +269,22 @@ $fieldQuery->setFieldParam('title', 'analyzer', 'my_analyzer');
 $boolQuery->addShould($fieldQuery);
 
 $tagsQuery = new \Elastica\Query\Terms();
-$tagsQuery->setTerms('tags', array('tag1', 'tag2'));
+$tagsQuery->setTerms('tags', ['tag1', 'tag2']);
 $boolQuery->addShould($tagsQuery);
 
 $categoryQuery = new \Elastica\Query\Terms();
-$categoryQuery->setTerms('categoryIds', array('1', '2', '3'));
+$categoryQuery->setTerms('categoryIds', ['1', '2', '3']);
 $boolQuery->addMust($categoryQuery);
 
 $data = $finder->find($boolQuery);
 ```
+
+Note: While passing an array of queries like this
+```php
+$boolQuery->addShould([$fieldQuery, $tagsQuery]);
+```
+works fine with Elasticsearch up to version 7.6, it _will_ result in an error like
+
+>[bool] failed to parse field [should]
+
+with version 7.7 and above.

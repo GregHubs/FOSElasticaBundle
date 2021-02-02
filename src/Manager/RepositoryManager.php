@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,6 @@ namespace FOS\ElasticaBundle\Manager;
 
 use FOS\ElasticaBundle\Finder\FinderInterface;
 use FOS\ElasticaBundle\Repository;
-use RuntimeException;
 
 /**
  * @author Richard Miller <info@limethinking.co.uk>
@@ -26,22 +25,16 @@ class RepositoryManager implements RepositoryManagerInterface
     /**
      * @var array
      */
-    private $types;
+    private $indexes = [];
 
     /**
      * @var array
      */
-    private $repositories;
+    private $repositories = [];
 
-    public function __construct()
+    public function addIndex(string $indexName, FinderInterface $finder, ?string $repositoryName = null): void
     {
-        $this->types = [];
-        $this->repositories = [];
-    }
-
-    public function addType($indexTypeName, FinderInterface $finder, $repositoryName = null)
-    {
-        $this->types[$indexTypeName] = [
+        $this->indexes[$indexName] = [
             'finder' => $finder,
             'repositoryName' => $repositoryName,
         ];
@@ -52,52 +45,46 @@ class RepositoryManager implements RepositoryManagerInterface
      *
      * Returns custom repository if one specified otherwise
      * returns a basic repository.
-     *
-     * @param string $typeName
-     *
-     * @return Repository
      */
-    public function getRepository($typeName)
+    public function getRepository(string $indexName): Repository
     {
-        if (isset($this->repositories[$typeName])) {
-            return $this->repositories[$typeName];
+        if (isset($this->repositories[$indexName])) {
+            return $this->repositories[$indexName];
         }
 
-        if (!isset($this->types[$typeName])) {
-            throw new RuntimeException(sprintf('No search finder configured for %s', $typeName));
+        if (!$this->hasRepository($indexName)) {
+            throw new \RuntimeException(\sprintf('No repository is configured for index "%s"', $indexName));
         }
 
-        $repository = $this->createRepository($typeName);
-        $this->repositories[$typeName] = $repository;
+        $repository = $this->createRepository($indexName);
+        $this->repositories[$indexName] = $repository;
 
         return $repository;
     }
 
-    /**
-     * @param $typeName
-     *
-     * @return string
-     */
-    protected function getRepositoryName($typeName)
+    public function hasRepository(string $indexName): bool
     {
-        if (isset($this->types[$typeName]['repositoryName'])) {
-            return $this->types[$typeName]['repositoryName'];
+        return isset($this->indexes[$indexName]);
+    }
+
+    protected function getRepositoryName(string $indexName): string
+    {
+        if (isset($this->indexes[$indexName]['repositoryName'])) {
+            return $this->indexes[$indexName]['repositoryName'];
         }
 
         return 'FOS\ElasticaBundle\Repository';
     }
 
     /**
-     * @param $typeName
-     *
      * @return mixed
      */
-    private function createRepository($typeName)
+    private function createRepository(string $indexName)
     {
-        if (!class_exists($repositoryName = $this->getRepositoryName($typeName))) {
-            throw new RuntimeException(sprintf('%s repository for %s does not exist', $repositoryName, $typeName));
+        if (!\class_exists($repositoryName = $this->getRepositoryName($indexName))) {
+            throw new \RuntimeException(\sprintf('%s repository for index "%s" does not exist', $repositoryName, $indexName));
         }
 
-        return new $repositoryName($this->types[$typeName]['finder']);
+        return new $repositoryName($this->indexes[$indexName]['finder']);
     }
 }

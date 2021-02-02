@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -57,11 +57,10 @@ class CreateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $indexName = $input->getOption('index');
-        $indexes = null === $indexName ? array_keys($this->indexManager->getAllIndexes()) : [$indexName];
+        $indexes = (null !== $index = $input->getOption('index')) ? [$index] : \array_keys($this->indexManager->getAllIndexes());
 
         foreach ($indexes as $indexName) {
-            $output->writeln(sprintf('<info>Creating</info> <comment>%s</comment>', $indexName));
+            $output->writeln(\sprintf('<info>Creating</info> <comment>%s</comment>', $indexName));
 
             $indexConfig = $this->configManager->getIndexConfiguration($indexName);
             $index = $this->indexManager->getIndex($indexName);
@@ -69,7 +68,13 @@ class CreateCommand extends Command
                 $this->aliasProcessor->setRootName($indexConfig, $index);
             }
             $mapping = $this->mappingBuilder->buildIndexMapping($indexConfig);
-            $index->create($mapping, false);
+            $index->create($mapping);
+
+            if ($indexConfig->isUseAlias()) {
+                $index->addAlias($indexName);
+            }
         }
+
+        return 0;
     }
 }

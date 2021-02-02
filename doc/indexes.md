@@ -1,19 +1,20 @@
-Type configuration
+Index configuration
 ==================
 
 Custom Property Paths
 ---------------------
 
-Since FOSElasticaBundle 3.1.0, it is now possible to define custom property paths
-to be used for data retrieval from the underlying model.
+Custom property paths can be used for data retrieval from the underlying model.
 
 ```yaml
-                user:
-                    properties:
-                        username:
-                            property_path: indexableUsername
-                        firstName:
-                            property_path: names[first]
+fos_elastica:
+    indexes:
+        user:
+            properties:
+                username:
+                    property_path: indexableUsername
+                firstName:
+                    property_path: names[first]
 ```
 
 This feature uses the Symfony PropertyAccessor component and supports all features
@@ -25,7 +26,7 @@ key `first` from an array on `User->names`.
 
 Setting the property path to `false` will disable transformation of that value. In this
 case the mapping will be created but no value will be populated while indexing. You can
-populate this value by listening to the `POST_TRANSFORM` event emitted by this bundle.
+populate this value by listening to the `FOS\ElasticaBundle\Event\PostTransformEvent` event emitted by this bundle.
 See [cookbook/custom-properties.md](cookbook/custom-properties.md) for more information
 about this event.
 
@@ -41,13 +42,15 @@ updating Elasticsearch.
 The error you're likely to see is something like:
 'Cannot find corresponding Doctrine objects for all Elastica results.'
 
-To solve this issue, each type can be configured to ignore the missing results:
+To solve this issue, each index can be configured to ignore the missing results:
 
 ```yaml
-                user:
-                    persistence:
-                        elastica_to_model_transformer:
-                            ignore_missing: true
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                elastica_to_model_transformer:
+                    ignore_missing: true
 ```
 
 Dynamic templates
@@ -61,21 +64,19 @@ applied when dynamic introduction of fields / objects happens.
 ```yaml
 fos_elastica:
     indexes:
-        app:
-            types:
-                user:
-                    dynamic_templates:
-                        my_template_1:
-                            match: apples_*
-                            mapping:
-                                type: float
-                        my_template_2:
-                            match: *
-                            match_mapping_type: text
-                            mapping:
-                                type: keyword
-                    properties:
-                        username: { type: text }
+        user:
+            dynamic_templates:
+                my_template_1:
+                    match: apples_*
+                    mapping:
+                        type: float
+                my_template_2:
+                    match: *
+                    match_mapping_type: text
+                    mapping:
+                        type: keyword
+            properties:
+                username: { type: text }
 ```
 
 Nested objects in FOSElasticaBundle
@@ -86,54 +87,23 @@ Note that object can autodetect properties
 ```yaml
 fos_elastica:
     indexes:
-        app:
-            types:
-                post:
-                    properties:
-                        date: { boost: 5 }
-                        title: { boost: 3 }
-                        content: ~
-                        comments:
-                            type: "nested"
-                            properties:
-                                date: { boost: 5 }
-                                content: ~
-                        user:
-                            type: "object"
-                        approver:
-                            type: "object"
-                            properties:
-                                date: { boost: 5 }
-```
-
-Parent fields
--------------
-
-```yaml
-fos_elastica:
-    indexes:
-        app:
-            types:
-                comment:
+        post:
+            properties:
+                date: { boost: 5 }
+                title: { boost: 3 }
+                content: ~
+                comments:
+                    type: "nested"
                     properties:
                         date: { boost: 5 }
                         content: ~
-                    _parent:
-                        type: "post"
-                        property: "post"
-                        identifier: "id"
+                user:
+                    type: "object"
+                approver:
+                    type: "object"
+                    properties:
+                        date: { boost: 5 }
 ```
-
-The parent field declaration has the following values:
-
- * `type`: The parent type.
- * `property`: The property in the child entity where to look for the parent entity. It may be ignored if is equal to
-  the parent type.
- * `identifier`: The property in the parent entity which has the parent identifier. Defaults to `id`.
-
-Note that to create a document with a parent, you need to call `setParent` on the document rather than setting a
-_parent field. If you do this wrong, you will see a `RoutingMissingException` as Elasticsearch does not know where
-to store a document that should have a parent but does not specify it.
 
 Date format example
 -------------------
@@ -141,11 +111,13 @@ Date format example
 If you want to specify a [date format](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html):
 
 ```yaml
-                user:
-                    properties:
-                        username: { type: text }
-                        lastlogin: { type: date, format: basic_date_time }
-                        birthday: { type: date, format: "yyyy-MM-dd" }
+fos_elastica:
+    indexes:
+        user:
+            properties:
+                username: { type: text }
+                lastlogin: { type: date, format: basic_date_time }
+                birthday: { type: date, format: "yyyy-MM-dd" }
 ```
 
 
@@ -156,11 +128,13 @@ If you want to specify manually the dynamic capabilities of Elasticsearch mappin
 the [dynamic](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic.html) option:
 
 ```yaml
-                user:
-                    dynamic: strict
-                    properties:
-                        username: { type: text }
-                        addresses: { type: object, dynamic: true }
+fos_elastica:
+    indexes:
+        user:
+            dynamic: strict
+            properties:
+                username: { type: text }
+                addresses: { type: object, dynamic: true }
 ```
 
 With this example, Elasticsearch is going to throw exceptions if you try to index a not mapped field, except in `addresses`.
@@ -168,12 +142,13 @@ With this example, Elasticsearch is going to throw exceptions if you try to inde
 Custom settings
 ---------------
 
-Any setting can be specified when declaring a type. For example, to enable a custom
+Any setting can be specified when declaring an index. For example, to enable a custom
 analyzer, you could write:
 
 ```yaml
+fos_elastica:
     indexes:
-        search:
+        blog:
             settings:
                 index:
                     analysis:
@@ -187,10 +162,8 @@ analyzer, you could write:
                                 type: "nGram"
                                 min_gram: 3
                                 max_gram: 5
-            types:
-                blog:
-                    properties:
-                        title: { boost: 8, analyzer: my_analyzer }
+            properties:
+                title: { boost: 8, analyzer: my_analyzer }
 ```
 
 Testing if an object should be indexed
@@ -201,7 +174,7 @@ different kinds of objects if your persistence backend supports these methods,
 but in some cases you might want to run an external service or call a property
 on the object to see if it should be indexed.
 
-A property, `indexable_callback` is provided under the type configuration that
+A property, `indexable_callback` is provided under the index configuration that
 lets you configure this behaviour which will apply for any automated watching
 for changes and for a repopulation of an index.
 
@@ -209,8 +182,9 @@ In the example below, we're checking the enabled property on the user to only
 index enabled users.
 
 ```yaml
-    types:
-        users:
+fos_elastica:
+    indexes:
+        user:
             indexable_callback: 'enabled'
 ```
 
@@ -235,8 +209,8 @@ The callback option supports multiple approaches:
   information on the ExpressionLanguage component and its capabilities see its
   [documentation](http://symfony.com/doc/current/components/expression_language/index.html)
 
-In all cases, the callback should return a true or false, with true indicating it will be
-indexed, and a false indicating the object should not be indexed, or should be removed
+In all cases, the callback should return a boolean, with `true` indicating it will be
+indexed, and `false` indicating the object should not be indexed, or should be removed
 from the index if we are running an update.
 
 Provider Configuration
@@ -248,10 +222,12 @@ When populating an index, it may be required to use a different query builder me
 to define which entities should be queried.
 
 ```yaml
-                user:
-                    persistence:
-                        provider:
-                            query_builder_method: createIsActiveQueryBuilder
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                provider:
+                    query_builder_method: createIsActiveQueryBuilder
 ```
 
 ### Populating batch size
@@ -260,10 +236,12 @@ By default, ElasticaBundle will index documents by packets of 100.
 You can change this value in the provider configuration.
 
 ```yaml
-                user:
-                    persistence:
-                        provider:
-                            batch_size: 10
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                provider:
+                    batch_size: 10
 ```
 
 ### Changing the document identifier
@@ -273,23 +251,27 @@ the Elasticsearch document identifier. You can change this value in the
 persistence configuration.
 
 ```yaml
-                user:
-                    persistence:
-                        identifier: searchId
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                identifier: searchId
 ```
 
 ### Turning on the persistence backend logger in production
 
 FOSElasticaBundle will turn off your persistence backend's logging configuration by default
-when Symfony2 is not in debug mode. You can force FOSElasticaBundle to always disable
+when Symfony is not in debug mode. You can force FOSElasticaBundle to always disable
 logging by setting debug_logging to false, to leave logging alone by setting it to true,
 or leave it set to its default value which will mirror %kernel.debug%.
 
 ```yaml
-                user:
-                    persistence:
-                        provider:
-                            debug_logging: false
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                provider:
+                    debug_logging: false
 ```
 
 Listener Configuration
@@ -302,11 +284,13 @@ when an object is added, updated or removed. It uses Doctrine lifecycle events.
 Declare that you want to update the index in real time:
 
 ```yaml
-                user:
-                    persistence:
-                        driver: orm #the driver can be orm, mongodb or phpcr
-                        model: Application\UserBundle\Entity\User
-                        listener: ~ # by default, listens to "insert", "update" and "delete"
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                driver: orm #the driver can be orm, mongodb or phpcr
+                model: Application\UserBundle\Entity\User
+                listener: ~ # by default, listens to "insert", "update" and "delete"
 ```
 
 Now the index is automatically updated each time the state of the bound Doctrine repository changes.
@@ -315,11 +299,14 @@ No need to repopulate the whole "user" index when a new `User` is created.
 You can also choose to only listen for some of the events:
 
 ```yaml
-                    persistence:
-                        listener:
-                            insert: true
-                            update: false
-                            delete: true
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                listener:
+                    insert: true
+                    update: false
+                    delete: true
 ```
 
 ### Asynchronous index update
@@ -330,9 +317,12 @@ trips to your Elasticsearch instance. All updates to Elasticsearch will be batch
 only fire after the `kernel.terminate` and `console.terminate` events.
 
 ```yaml
-                    persistence:
-                        listener:
-                            defer: true
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                listener:
+                    defer: true
 ```
 
 Logging Errors
@@ -342,9 +332,12 @@ By default FOSElasticaBundle will not catch errors thrown by Elastica/Elasticsea
 Configure a logger per listener if you would rather catch and log these.
 
 ```yaml
-                    persistence:
-                        listener:
-                            logger: true
+fos_elastica:
+    indexes:
+        user:
+            persistence:
+                listener:
+                    logger: true
 ```
 
 Specifying `true` will use the default Elastica logger.  Alternatively define your own

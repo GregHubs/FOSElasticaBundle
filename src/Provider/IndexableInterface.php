@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,12 +15,6 @@ interface IndexableInterface
 {
     /**
      * Checks if an object passed should be indexable or not.
-     *
-     * @param string $indexName
-     * @param string $typeName
-     * @param mixed  $object
-     *
-     * @return bool
      */
-    public function isObjectIndexable($indexName, $typeName, $object);
+    public function isObjectIndexable(string $indexName, object $object): bool;
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,7 +11,7 @@
 
 namespace FOS\ElasticaBundle\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use FOS\ElasticaBundle\HybridResult;
 use FOS\ElasticaBundle\Transformer\AbstractElasticaToModelTransformer as BaseTransformer;
 use FOS\ElasticaBundle\Transformer\HighlightableModelInterface;
@@ -52,24 +52,18 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
 
     /**
      * Instantiates a new Mapper.
-     *
-     * @param ManagerRegistry $registry
-     * @param string          $objectClass
-     * @param array           $options
      */
-    public function __construct(ManagerRegistry $registry, $objectClass, array $options = [])
+    public function __construct(ManagerRegistry $registry, string $objectClass, array $options = [])
     {
         $this->registry = $registry;
         $this->objectClass = $objectClass;
-        $this->options = array_merge($this->options, $options);
+        $this->options = \array_merge($this->options, $options);
     }
 
     /**
      * Returns the object class that is used for conversion.
-     *
-     * @return string
      */
-    public function getObjectClass()
+    public function getObjectClass(): string
     {
         return $this->objectClass;
     }
@@ -93,16 +87,16 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
         }
 
         $objects = $this->findByIdentifiers($ids, $this->options['hydrate']);
-        $objectsCnt = count($objects);
-        $elasticaObjectsCnt = count($elasticaObjects);
+        $objectsCnt = \count($objects);
+        $elasticaObjectsCnt = \count($elasticaObjects);
         $propertyAccessor = $this->propertyAccessor;
         $identifier = $this->options['identifier'];
         if (!$this->options['ignore_missing'] && $objectsCnt < $elasticaObjectsCnt) {
-            $missingIds = array_diff($ids, array_map(function ($object) use ($propertyAccessor, $identifier) {
+            $missingIds = \array_diff($ids, \array_map(function ($object) use ($propertyAccessor, $identifier) {
                 return $propertyAccessor->getValue($object, $identifier);
             }, $objects));
 
-            throw new \RuntimeException(sprintf('Cannot find corresponding Doctrine objects (%d) for all Elastica results (%d). Missing IDs: %s. IDs: %s', $objectsCnt, $elasticaObjectsCnt, implode(', ', $missingIds), implode(', ', $ids)));
+            throw new \RuntimeException(\sprintf('Cannot find corresponding Doctrine objects (%d) for all Elastica results (%d). Missing IDs: %s. IDs: %s', $objectsCnt, $elasticaObjectsCnt, \implode(', ', $missingIds), \implode(', ', $ids)));
         }
 
         foreach ($objects as $object) {
@@ -113,8 +107,8 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
         }
 
         // sort objects in the order of ids
-        $idPos = array_flip($ids);
-        usort(
+        $idPos = \array_flip($ids);
+        \usort(
             $objects,
             function ($a, $b) use ($idPos, $identifier, $propertyAccessor) {
                 if ($this->options['hydrate']) {
@@ -156,7 +150,7 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
     /**
      * {@inheritdoc}
      */
-    public function getIdentifierField()
+    public function getIdentifierField(): string
     {
         return $this->options['identifier'];
     }
@@ -169,5 +163,5 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
      *
      * @return array of objects or arrays
      */
-    abstract protected function findByIdentifiers(array $identifierValues, $hydrate);
+    abstract protected function findByIdentifiers(array $identifierValues, bool $hydrate);
 }

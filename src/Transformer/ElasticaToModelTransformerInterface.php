@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,23 +27,17 @@ interface ElasticaToModelTransformerInterface
     public function transform(array $elasticaObjects);
 
     /**
-     * @param array $elasticaObjects
-     *
      * @return mixed
      */
     public function hybridTransform(array $elasticaObjects);
 
     /**
      * Returns the object class used by the transformer.
-     *
-     * @return string
      */
-    public function getObjectClass();
+    public function getObjectClass(): string;
 
     /**
      * Returns the identifier field from the options.
-     *
-     * @return string the identifier field
      */
-    public function getIdentifierField();
+    public function getIdentifierField(): string;
 }

@@ -1,37 +1,29 @@
 <?php
+
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Provider;
 
 interface PagerInterface
 {
-    /**
-     * @return int
-     */
-    public function getNbResults();
+    public function getNbResults(): int;
 
-    /**
-     * @return int
-     */
-    public function getNbPages();
+    public function getNbPages(): int;
 
-    /**
-     * @return int
-     */
-    public function getCurrentPage();
+    public function getCurrentPage(): int;
 
-    /**
-     * @param int $page
-     */
-    public function setCurrentPage($page);
+    public function setCurrentPage(int $page);
 
-    /**
-     * @return int
-     */
-    public function getMaxPerPage();
+    public function getMaxPerPage(): int;
 
-    /**
-     * @param int $perPage
-     */
-    public function setMaxPerPage($perPage);
+    public function setMaxPerPage(int $perPage);
 
     /**
      * @return array

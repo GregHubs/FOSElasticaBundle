@@ -1,8 +1,9 @@
 <?php
+
 /*
- * This file is part of the OpCart software.
+ * This file is part of the FOSElasticaBundle package.
  *
- * (c) 2015, OpticsPlanet, Inc
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,7 +12,7 @@
 namespace FOS\ElasticaBundle\Configuration;
 
 /**
- * Index configuration trait class
+ * Index configuration trait class.
  *
  * @author Dmitry Balabka <dmitry.balabka@intexsys.lv>
  */
@@ -23,6 +24,13 @@ trait IndexConfigTrait
      * @var string
      */
     private $elasticSearchName;
+
+    /**
+     * The model of the index.
+     *
+     * @var string|null
+     */
+    private $model;
 
     /**
      * The internal name of the index. May not be the same as the name used in ElasticSearch,
@@ -40,57 +48,62 @@ trait IndexConfigTrait
     private $settings;
 
     /**
-     * All types that belong to this index.
-     *
-     * @var TypeConfig[]
+     * @var array
      */
-    private $types;
+    private $config;
 
     /**
-     * @return string
+     * @var array
      */
-    public function getElasticSearchName()
+    private $mapping;
+
+    public function getElasticSearchName(): string
     {
         return $this->elasticSearchName;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
+    public function getModel(): ?string
+    {
+        return $this->model;
+    }
+
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return array
-     */
-    public function getSettings()
+    public function getSettings(): array
     {
         return $this->settings;
     }
 
-    /**
-     * @param string $typeName
-     *
-     * @return TypeConfig
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function getType($typeName)
+    public function getDateDetection(): ?bool
     {
-        if (!array_key_exists($typeName, $this->types)) {
-            throw new \InvalidArgumentException(sprintf('Type "%s" does not exist on index "%s"', $typeName, $this->name));
-        }
-
-        return $this->types[$typeName];
+        return $this->config['date_detection'] ?? null;
     }
 
-    /**
-     * @return \FOS\ElasticaBundle\Configuration\TypeConfig[]
-     */
-    public function getTypes()
+    public function getDynamicDateFormats(): ?array
     {
-        return $this->types;
+        return $this->config['dynamic_date_formats'] ?? null;
+    }
+
+    public function getAnalyzer(): ?string
+    {
+        return $this->config['analyzer'] ?? null;
+    }
+
+    public function getMapping(): array
+    {
+        return $this->mapping;
+    }
+
+    public function getNumericDetection(): ?bool
+    {
+        return $this->config['numeric_detection'] ?? null;
+    }
+
+    public function getDynamic()
+    {
+        return $this->config['dynamic'] ?? null;
     }
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,7 +22,7 @@ class ConfigurationTest extends TestCase
      */
     private $processor;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->processor = new Processor();
     }
@@ -36,6 +36,10 @@ class ConfigurationTest extends TestCase
             'indexes' => [],
             'index_templates' => [],
             'default_manager' => 'orm',
+            'messenger' => [
+                'enabled' => false,
+                'bus' => null,
+            ],
         ], $configuration);
     }
 
@@ -119,7 +123,7 @@ class ConfigurationTest extends TestCase
         $this->assertSame('http://www.github.com/', $configuration['clients']['default']['connections'][0]['url']);
     }
 
-    public function testTypeConfig()
+    public function testIndexConfig()
     {
         $this->getConfigs([
             'clients' => [
@@ -127,7 +131,7 @@ class ConfigurationTest extends TestCase
             ],
             'indexes' => [
                 'test' => [
-                    'type_prototype' => [
+                    'index_prototype' => [
                         'analyzer' => 'custom_analyzer',
                         'persistence' => [
                             'identifier' => 'ID',
@@ -138,27 +142,15 @@ class ConfigurationTest extends TestCase
                             'serialize_null' => false,
                         ],
                     ],
-                    'types' => [
-                        'test' => [
-                            'properties' => [
-                                'title' => [],
-                                'published' => ['type' => 'datetime'],
-                                'body' => null,
-                            ],
-                            'persistence' => [
-                                'listener' => [
-                                    'logger' => true,
-                                ],
-                            ],
+                    'persistence' => [
+                        'listener' => [
+                            'logger' => true,
                         ],
-                        'test2' => [
-                            'properties' => [
-                                'title' => null,
-                                'children' => [
-                                    'type' => 'nested',
-                                ],
-                            ],
-                        ],
+                    ],
+                    'properties' => [
+                        'title' => [],
+                        'published' => ['type' => 'datetime'],
+                        'body' => null,
                     ],
                 ],
             ],
@@ -187,14 +179,11 @@ class ConfigurationTest extends TestCase
                 ],
                 'indexes' => [
                     'test' => [
-                        'types' => [
-                            'test' => null,
-                        ],
                     ],
                 ],
             ]);
 
-        $this->assertArrayHasKey('properties', $configuration['indexes']['test']['types']['test']);
+        $this->assertArrayHasKey('properties', $configuration['indexes']['test']);
     }
 
     public function testNestedProperties()
@@ -205,32 +194,20 @@ class ConfigurationTest extends TestCase
             ],
             'indexes' => [
                 'test' => [
-                    'types' => [
-                        'user' => [
+                    'persistence' => [],
+                    'properties' => [
+                        'field1' => [],
+                        'field2' => [
+                            'type' => 'nested',
                             'properties' => [
-                                'field1' => [],
-                            ],
-                            'persistence' => [],
-                        ],
-                        'user_profile' => [
-                            '_parent' => [
-                                'type' => 'user',
-                            ],
-                            'properties' => [
-                                'field1' => [],
-                                'field2' => [
-                                    'type' => 'nested',
+                                'nested_field1' => [
+                                    'type' => 'integer',
+                                ],
+                                'nested_field2' => [
+                                    'type' => 'object',
                                     'properties' => [
-                                        'nested_field1' => [
+                                        'id' => [
                                             'type' => 'integer',
-                                        ],
-                                        'nested_field2' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'id' => [
-                                                    'type' => 'integer',
-                                                ],
-                                            ],
                                         ],
                                     ],
                                 ],
@@ -322,12 +299,12 @@ class ConfigurationTest extends TestCase
         ]);
         $connection = $configuration['clients']['default']['connections'][0];
         $this->assertSame([400, 403, 404], $connection['http_error_codes']);
-        
+
         // test custom
         $configuration = $this->getConfigs([
             'clients' => [
                 'default' => [
-                    'http_error_codes' => ['HTTP_ERROR_CODE']
+                    'http_error_codes' => ['HTTP_ERROR_CODE'],
                 ],
             ],
         ]);
@@ -342,13 +319,9 @@ class ConfigurationTest extends TestCase
                 'index_templates' => [
                     'some_template' => [
                         'template' => 'some_template_*',
-                        'client'   => 'default',
-                        'types'    => [
-                            'some_type' => [
-                                'properties'  => [
-                                    'some_field' => [],
-                                ],
-                            ],
+                        'client' => 'default',
+                        'properties' => [
+                            'some_field' => [],
                         ],
                     ],
                 ],
@@ -358,7 +331,7 @@ class ConfigurationTest extends TestCase
         $this->assertSame('some_template_*', $indexTemplate['template']);
         $this->assertSame('default', $indexTemplate['client']);
         $this->assertSame([], $indexTemplate['settings']);
-        $this->assertArrayHasKey('some_field', $indexTemplate['types']['some_type']['properties']);
+        $this->assertArrayHasKey('some_field', $indexTemplate['properties']);
     }
 
     private function getConfigs(array $configArray)

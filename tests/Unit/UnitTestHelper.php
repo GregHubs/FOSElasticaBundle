@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,9 +11,9 @@
 
 namespace FOS\ElasticaBundle\Tests\Unit;
 
-use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
-use Elastica\SearchableInterface;
 use Elastica\ResultSet;
+use Elastica\SearchableInterface;
+use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
 use PHPUnit\Framework\TestCase;
 
 class UnitTestHelper extends TestCase
@@ -38,6 +38,7 @@ class UnitTestHelper extends TestCase
         $mock = $this
             ->getMockBuilder(ElasticaToModelTransformerInterface::class)
             ->getMock();
+
         return $mock;
     }
 
@@ -46,6 +47,7 @@ class UnitTestHelper extends TestCase
         $mock = $this
             ->getMockBuilder(SearchableInterface::class)
             ->getMock();
+
         return $mock;
     }
 
@@ -55,6 +57,7 @@ class UnitTestHelper extends TestCase
             ->getMockBuilder(ResultSet::class)
             ->disableOriginalConstructor()
             ->getMock();
+
         return $mock;
     }
 }

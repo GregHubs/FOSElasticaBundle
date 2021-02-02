@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,9 +21,6 @@ class RawPartialResults implements PartialResultsInterface
 {
     protected $resultSet;
 
-    /**
-     * @param ResultSet $resultSet
-     */
     public function __construct(ResultSet $resultSet)
     {
         $this->resultSet = $resultSet;
@@ -34,7 +31,7 @@ class RawPartialResults implements PartialResultsInterface
      */
     public function toArray()
     {
-        return array_map(function (Result $result) {
+        return \array_map(function (Result $result) {
             return $result->getSource();
         }, $this->resultSet->getResults());
     }

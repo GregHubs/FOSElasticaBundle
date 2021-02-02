@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,10 +23,8 @@ interface ObjectPersisterInterface
      * Checks if this persister can handle the given object or not.
      *
      * @param mixed $object
-     *
-     * @return bool
      */
-    public function handlesObject($object);
+    public function handlesObject($object): bool;
 
     /**
      * Insert one object into the type

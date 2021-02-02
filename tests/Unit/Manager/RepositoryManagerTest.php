@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@ use FOS\ElasticaBundle\Manager\RepositoryManager;
 use FOS\ElasticaBundle\Repository;
 use PHPUnit\Framework\TestCase;
 
-class CustomRepository
+class CustomRepository extends Repository
 {
 }
 
@@ -33,11 +33,11 @@ class RepositoryManagerTest extends TestCase
     {
         $finderMock = $this->createMock(TransformedFinder::class);
 
-        $typeName = 'index/type';
+        $indexName = 'index';
 
         $manager = new RepositoryManager();
-        $manager->addType($typeName, $finderMock);
-        $repository = $manager->getRepository($typeName);
+        $manager->addIndex($indexName, $finderMock);
+        $repository = $manager->getRepository($indexName);
         $this->assertInstanceOf(Repository::class, $repository);
     }
 
@@ -45,39 +45,37 @@ class RepositoryManagerTest extends TestCase
     {
         $finderMock = $this->createMock(TransformedFinder::class);
 
-        $typeName = 'index/type';
+        $indexName = 'index';
 
         $manager = new RepositoryManager();
-        $manager->addType($typeName, $finderMock, CustomRepository::class);
-        $repository = $manager->getRepository($typeName);
+        $manager->addIndex($indexName, $finderMock, CustomRepository::class);
+        $repository = $manager->getRepository($indexName);
         $this->assertInstanceOf(CustomRepository::class, $repository);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testThatGetRepositoryThrowsExceptionIfEntityNotConfigured()
     {
         $finderMock = $this->createMock(TransformedFinder::class);
 
-        $typeName = 'index/type';
+        $indexName = 'index';
 
         $manager = new RepositoryManager();
-        $manager->addType($typeName, $finderMock);
+        $manager->addIndex($indexName, $finderMock);
+
+        $this->expectException(\RuntimeException::class);
         $manager->getRepository('Missing type');
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testThatGetRepositoryThrowsExceptionIfCustomRepositoryNotFound()
     {
         $finderMock = $this->createMock(TransformedFinder::class);
 
-        $typeName = 'index/type';
+        $indexName = 'index';
 
         $manager = new RepositoryManager();
-        $manager->addType($typeName, $finderMock, 'FOS\ElasticaBundle\Tests\MissingRepository');
-        $manager->getRepository($typeName);
+        $manager->addIndex($indexName, $finderMock, 'FOS\ElasticaBundle\Tests\MissingRepository');
+
+        $this->expectException(\RuntimeException::class);
+        $manager->getRepository($indexName);
     }
 }

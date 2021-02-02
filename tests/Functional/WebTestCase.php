@@ -3,19 +3,10 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
- */
-
-/**
- * This file is part of the FOSElasticaBundle project.
- *
- * (c) Tim Nagel <tim@nagel.com.au>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace FOS\ElasticaBundle\Tests\Functional;
@@ -29,6 +20,16 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class WebTestCase extends BaseKernelTestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        static::deleteTmpDir();
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        static::deleteTmpDir();
+    }
+
     protected static function getKernelClass()
     {
         require_once __DIR__.'/app/AppKernel.php';
@@ -36,19 +37,9 @@ class WebTestCase extends BaseKernelTestCase
         return AppKernel::class;
     }
 
-    public static function setUpBeforeClass()
-    {
-        static::deleteTmpDir();
-    }
-
-    public static function tearDownAfterClass()
-    {
-        static::deleteTmpDir();
-    }
-
     protected static function deleteTmpDir()
     {
-        if (!file_exists($dir = sys_get_temp_dir().'/'.static::getVarDir())) {
+        if (!\file_exists($dir = \sys_get_temp_dir().'/'.static::getVarDir())) {
             return;
         }
         $fs = new Filesystem();
@@ -66,14 +57,14 @@ class WebTestCase extends BaseKernelTestCase
         return new $class(
             static::getVarDir(),
             $options['test_case'],
-            isset($options['root_config']) ? $options['root_config'] : 'config.yml',
-            isset($options['environment']) ? $options['environment'] : strtolower(static::getVarDir().$options['test_case']),
-            isset($options['debug']) ? $options['debug'] : true
+            $options['root_config'] ?? 'config.yml',
+            $options['environment'] ?? \strtolower(static::getVarDir().$options['test_case']),
+            $options['debug'] ?? true
         );
     }
 
     protected static function getVarDir()
     {
-        return substr(strrchr(get_called_class(), '\\'), 1);
+        return \substr(\strrchr(\get_called_class(), '\\'), 1);
     }
 }

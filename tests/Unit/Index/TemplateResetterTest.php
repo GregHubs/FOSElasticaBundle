@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Tests\Unit\Index;
 
 use Elastica\Client;
@@ -11,6 +20,7 @@ use FOS\ElasticaBundle\Index\IndexTemplateManager;
 use FOS\ElasticaBundle\Index\MappingBuilder;
 use FOS\ElasticaBundle\Index\ResetterInterface;
 use FOS\ElasticaBundle\Index\TemplateResetter;
+use FOS\ElasticaBundle\Tests\Unit\ProphecyTrait;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 
@@ -19,6 +29,8 @@ use Prophecy\Argument;
  */
 class TemplateResetterTest extends TestCase
 {
+    use ProphecyTrait;
+
     /**
      * @var ManagerInterface
      */
@@ -44,7 +56,7 @@ class TemplateResetterTest extends TestCase
      */
     private $resetter;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->configManager = $this->prophesize(ManagerInterface::class);
         $this->mappingBuilder = $this->prophesize(MappingBuilder::class);

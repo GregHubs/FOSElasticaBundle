@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -94,9 +94,6 @@ class PaginateElasticaQuerySubscriberTest extends TestCase
         $this->assertSame($expected, $query->getParam('sort'));
     }
 
-    /**
-     * @expectedException \UnexpectedValueException
-     */
     public function testShouldThrowIfFieldIsNotWhitelisted()
     {
         $subscriber = new PaginateElasticaQuerySubscriber($this->getRequestStack(new Request(['ord' => 'owner'])));
@@ -118,6 +115,7 @@ class PaginateElasticaQuerySubscriberTest extends TestCase
             'sortFieldWhitelist' => ['createdAt', 'updatedAt'],
         ];
 
+        $this->expectException(\UnexpectedValueException::class);
         $subscriber->items($event);
     }
 
@@ -297,7 +295,7 @@ class PaginateElasticaQuerySubscriberTest extends TestCase
         return $this->createMock(PartialResultsInterface::class);
     }
 
-    private function getRequestStack(Request $request = null)
+    private function getRequestStack(?Request $request = null)
     {
         $stack = new RequestStack();
 

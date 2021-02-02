@@ -1,10 +1,18 @@
 <?php
 
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Tests\Unit\Configuration\Source;
 
 use FOS\ElasticaBundle\Configuration\IndexTemplateConfig;
 use FOS\ElasticaBundle\Configuration\Source\TemplateContainerSource;
-use FOS\ElasticaBundle\Configuration\TypeConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,20 +33,15 @@ class TemplateContainerSourceTest extends TestCase
             [
                 [
                     'name' => 'some_index_template',
-                    'types' => [
-                        [
-                            'name' => 'some_type',
-                            'mapping' => [
-                                'some_field' => [],
-                            ],
-                            'config' => [
-                                'date_detection' => 'date_detection_value',
-                            ],
-                        ],
+                    'mapping' => [
+                        'some_field' => [],
+                    ],
+                    'config' => [
+                        'date_detection' => false,
                     ],
                     'elasticsearch_name' => 'some_search_name',
                     'settings' => [
-                        'some_setting' => 'setting_value'
+                        'some_setting' => 'setting_value',
                     ],
                     'template' => 'some_index_config_*',
                 ],
@@ -51,14 +54,13 @@ class TemplateContainerSourceTest extends TestCase
         $this->assertEquals('some_index_config_*', $templateConfig->getTemplate());
         $this->assertEquals(
             [
-                'some_setting' => 'setting_value'
+                'some_setting' => 'setting_value',
             ],
             $templateConfig->getSettings()
         );
         $this->assertEquals('some_search_name', $templateConfig->getElasticSearchName());
-        $this->assertInstanceOf(TypeConfig::class, $type = $templateConfig->getType('some_type'));
-        $this->assertEquals('some_type', $type->getName());
-        $this->assertEquals(['some_field' => []], $type->getMapping());
-        $this->assertEquals('date_detection_value', $type->getDateDetection());
+        $this->assertEquals('some_index_template', $templateConfig->getName());
+        $this->assertEquals(['some_field' => []], $templateConfig->getMapping());
+        $this->assertEquals(false, $templateConfig->getDateDetection());
     }
 }

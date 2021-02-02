@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,9 +11,10 @@
 
 namespace FOS\ElasticaBundle\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use FOS\ElasticaBundle\Finder\FinderInterface;
 use FOS\ElasticaBundle\Manager\RepositoryManagerInterface;
+use FOS\ElasticaBundle\Repository;
 
 /**
  * @author Richard Miller <info@limethinking.co.uk>
@@ -37,10 +38,6 @@ class RepositoryManager implements RepositoryManagerInterface
      */
     private $repositoryManager;
 
-    /**
-     * @param ManagerRegistry            $managerRegistry
-     * @param RepositoryManagerInterface $repositoryManager
-     */
     public function __construct(ManagerRegistry $managerRegistry, RepositoryManagerInterface $repositoryManager)
     {
         $this->managerRegistry = $managerRegistry;
@@ -50,14 +47,14 @@ class RepositoryManager implements RepositoryManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function addType($indexTypeName, FinderInterface $finder, $repositoryName = null)
+    public function addIndex(string $indexName, FinderInterface $finder, ?string $repositoryName = null): void
     {
-        throw new \LogicException(__METHOD__.' should not be called. Call addType on the main repository manager');
+        throw new \LogicException(__METHOD__.' should not be called. Call addIndex on the main repository manager');
     }
 
-    public function addEntity($entityName, $indexTypeName)
+    public function addEntity($entityName, $indexName)
     {
-        $this->entities[$entityName] = $indexTypeName;
+        $this->entities[$entityName] = $indexName;
     }
 
     /**
@@ -65,11 +62,11 @@ class RepositoryManager implements RepositoryManagerInterface
      *
      * {@inheritdoc}
      */
-    public function getRepository($entityName)
+    public function getRepository(string $entityName): Repository
     {
         $realEntityName = $entityName;
-        if (false !== strpos($entityName, ':')) {
-            list($namespaceAlias, $simpleClassName) = explode(':', $entityName);
+        if (false !== \strpos($entityName, ':')) {
+            [$namespaceAlias, $simpleClassName] = \explode(':', $entityName);
             $realEntityName = $this->managerRegistry->getAliasNamespace($namespaceAlias).'\\'.$simpleClassName;
         }
 
@@ -78,5 +75,10 @@ class RepositoryManager implements RepositoryManagerInterface
         }
 
         return $this->repositoryManager->getRepository($realEntityName);
+    }
+
+    public function hasRepository(string $indexName): bool
+    {
+        return $this->repositoryManager->hasRepository($indexName);
     }
 }

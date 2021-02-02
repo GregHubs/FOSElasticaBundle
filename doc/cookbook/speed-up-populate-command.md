@@ -54,7 +54,7 @@ or (use it only if you cannot use the solution above):
 $ ./bin/console enqueue:transport:consume enqueue_elastica.populate_processor -vvv 
 ``` 
  
-* Run populate command with `--pager-persiter=queue` option set:
+* Run populate command with `--pager-persister=queue` option set:
  
 ```bash
 $ ./bin/console fos:elastica:populate --pager-persister=queue 
@@ -63,7 +63,7 @@ $ ./bin/console fos:elastica:populate --pager-persister=queue
 ## Customization
 
 The `QueuePagerPersister` could be customized via options. 
-The options could be customized in a listener subscribed on `FOS\ElasticaBundle\Persister\Event::PRE_PERSIST` event for example.
+The options could be customized in a listener subscribed on `FOS\ElasticaBundle\Persister\Event\PrePersistEvent` event for example.
 
 Here's the list of available options:
 

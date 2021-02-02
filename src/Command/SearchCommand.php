@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,7 +40,6 @@ class SearchCommand extends Command
     {
         $this
             ->setName('fos:elastica:search')
-            ->addArgument('type', InputArgument::REQUIRED, 'The type to search in')
             ->addArgument('query', InputArgument::REQUIRED, 'The text to search')
             ->addOption('index', null, InputOption::VALUE_REQUIRED, 'The index to search in')
             ->addOption('limit', null, InputOption::VALUE_REQUIRED, 'The maximum number of documents to return', 20)
@@ -56,23 +55,23 @@ class SearchCommand extends Command
     {
         $indexName = $input->getOption('index');
         $index = $this->indexManager->getIndex($indexName ? $indexName : null);
-        $type = $index->getType($input->getArgument('type'));
         $query = Query::create($input->getArgument('query'));
         $query->setSize($input->getOption('limit'));
         if ($input->getOption('explain')) {
             $query->setExplain(true);
         }
 
-        $resultSet = $type->search($query);
+        $resultSet = $index->search($query);
 
-        $output->writeLn(sprintf('Found %d results', $type->count($query)));
+        $output->writeLn(\sprintf('Found %d results', $index->count($query)));
         foreach ($resultSet->getResults() as $result) {
             $output->writeLn($this->formatResult($result, $input->getOption('show-field'), $input->getOption('show-source'), $input->getOption('show-id'), $input->getOption('explain')));
         }
+
+        return 0;
     }
 
     /**
-     * @param Result $result
      * @param string $showField
      * @param string $showSource
      * @param string $showId
@@ -84,19 +83,19 @@ class SearchCommand extends Command
     {
         $source = $result->getSource();
         if ($showField) {
-            $toString = isset($source[$showField]) ? $source[$showField] : '-';
+            $toString = $source[$showField] ?? '-';
         } else {
-            $toString = reset($source);
+            $toString = \reset($source);
         }
-        $string = sprintf('[%0.2f] %s', $result->getScore(), var_export($toString, true));
+        $string = \sprintf('[%0.2f] %s', $result->getScore(), \var_export($toString, true));
         if ($showSource) {
-            $string = sprintf('%s %s', $string, json_encode($source));
+            $string = \sprintf('%s %s', $string, \json_encode($source));
         }
         if ($showId) {
-            $string = sprintf('{%s} %s', $result->getId(), $string);
+            $string = \sprintf('{%s} %s', $result->getId(), $string);
         }
         if ($explain) {
-            $string = sprintf('%s %s', $string, json_encode($result->getExplanation()));
+            $string = \sprintf('%s %s', $string, \json_encode($result->getExplanation()));
         }
 
         return $string;

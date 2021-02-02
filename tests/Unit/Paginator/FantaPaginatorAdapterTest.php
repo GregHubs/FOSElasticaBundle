@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,26 +18,6 @@ use PHPUnit\Framework\TestCase;
 
 class FantaPaginatorAdapterTest extends TestCase
 {
-    private function mockPartialResults($results)
-    {
-        $mock = $this
-            ->getMockBuilder(PartialResultsInterface::class)
-            ->getMock();
-        $mock
-            ->expects($this->exactly(1))
-            ->method('toArray')
-            ->willReturn($results);
-        return $mock;
-    }
-
-    private function mockPaginatorAdapter()
-    {
-        $mock = $this
-            ->getMockBuilder(PaginatorAdapterInterface::class)
-            ->getMock();
-        return $mock;
-    }
-
     public function testGetNbResults()
     {
         $mock = $this->mockPaginatorAdapter();
@@ -95,5 +75,27 @@ class FantaPaginatorAdapterTest extends TestCase
             ->willReturn(123);
         $adapter = new FantaPaginatorAdapter($mock);
         $this->assertEquals(123, $adapter->getMaxScore());
+    }
+
+    private function mockPartialResults($results)
+    {
+        $mock = $this
+            ->getMockBuilder(PartialResultsInterface::class)
+            ->getMock();
+        $mock
+            ->expects($this->exactly(1))
+            ->method('toArray')
+            ->willReturn($results);
+
+        return $mock;
+    }
+
+    private function mockPaginatorAdapter()
+    {
+        $mock = $this
+            ->getMockBuilder(PaginatorAdapterInterface::class)
+            ->getMock();
+
+        return $mock;
     }
 }

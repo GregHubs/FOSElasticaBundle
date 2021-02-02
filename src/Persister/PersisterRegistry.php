@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,42 +11,29 @@
 
 namespace FOS\ElasticaBundle\Persister;
 
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
-class PersisterRegistry implements ContainerAwareInterface
+class PersisterRegistry
 {
-    use ContainerAwareTrait;
+    /** @var ServiceLocator */
+    private $persisters;
 
-    /** 
-     * @var array 
-     */
-    private $persisters = [];
-
-    /**
-     * @param array $persisters
-     */
-    public function __construct(array $persisters)
+    public function __construct(ServiceLocator $persisters)
     {
         $this->persisters = $persisters;
     }
 
     /**
-     * Gets the persister for an index and type.
+     * Gets the persister for an index.
      *
-     * @param string $index
-     * @param string $type
-     *
-     * @return ObjectPersisterInterface
-     *
-     * @throws \InvalidArgumentException if no persister was registered for the index and type
+     * @throws \InvalidArgumentException if no persister was registered for the index
      */
-    public function getPersister($index, $type)
+    public function getPersister(string $index): ObjectPersisterInterface
     {
-        if (!isset($this->persisters[$index][$type])) {
-            throw new \InvalidArgumentException(sprintf('No persister was registered for index "%s" and type "%s".', $index, $type));
+        if (!$this->persisters->has($index)) {
+            throw new \InvalidArgumentException(\sprintf('No persister was registered for index "%s".', $index));
         }
 
-        return $this->container->get($this->persisters[$index][$type]);
+        return $this->persisters->get($index);
     }
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -45,6 +45,19 @@ class TransformedFinderTest extends TestCase
         $finder->findHybrid($query, $limit);
     }
 
+    public function testFindRawMethodTransformsSearchResults()
+    {
+        $transformer = $this->createMock(ElasticaToModelTransformerInterface::class);
+        $transformer->expects($this->never())
+            ->method($this->anything());
+        $query = Query::create('');
+        $limit = 10;
+
+        $finder = $this->createMockFinderForSearch($transformer, $query, $limit);
+
+        $finder->findRaw($query, $limit);
+    }
+
     public function testSearchMethodCreatesAQueryAndReturnsResultsFromSearchableDependency()
     {
         $searchable = $this->createMock(SearchableInterface::class);
@@ -62,7 +75,19 @@ class TransformedFinderTest extends TestCase
 
         $results = $method->invoke($finder, '', 10);
 
-        $this->assertInternalType('array', $results);
+        $this->assertIsArray($results);
+    }
+
+    public function testFindHybridPaginatedReturnsAConfiguredPagerfantaObject()
+    {
+        $searchable = $this->createMock(SearchableInterface::class);
+        $transformer = $this->createMock(ElasticaToModelTransformerInterface::class);
+
+        $finder = new TransformedFinder($searchable, $transformer);
+
+        $pagerfanta = $finder->findHybridPaginated('');
+
+        $this->assertInstanceOf(Pagerfanta::class, $pagerfanta);
     }
 
     public function testFindPaginatedReturnsAConfiguredPagerfantaObject()

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,7 +11,6 @@
 
 namespace FOS\ElasticaBundle\Persister\Listener;
 
-use FOS\ElasticaBundle\Persister\Event\Events;
 use FOS\ElasticaBundle\Persister\Event\PreInsertObjectsEvent;
 use FOS\ElasticaBundle\Provider\IndexableInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -28,20 +27,19 @@ class FilterObjectsListener implements EventSubscriberInterface
         $this->indexable = $indexable;
     }
 
-    public function filterObjects(PreInsertObjectsEvent $event)
+    public function filterObjects(PreInsertObjectsEvent $event): void
     {
         $options = $event->getOptions();
         if (false == empty($options['skip_indexable_check'])) {
             return;
         }
-        
+
         $objects = $event->getObjects();
         $index = $options['indexName'];
-        $type = $options['typeName'];
 
-        $filtered = array();
+        $filtered = [];
         foreach ($objects as $object) {
-            if (!$this->indexable->isObjectIndexable($index, $type, $object)) {
+            if (!$this->indexable->isObjectIndexable($index, $object)) {
                 continue;
             }
 
@@ -54,8 +52,10 @@ class FilterObjectsListener implements EventSubscriberInterface
     /**
      * {@inheritdoc}
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
-        return [Events::PRE_INSERT_OBJECTS => 'filterObjects'];
+        return [
+            PreInsertObjectsEvent::class => 'filterObjects',
+        ];
     }
 }

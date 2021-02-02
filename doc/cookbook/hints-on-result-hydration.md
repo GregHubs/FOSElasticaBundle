@@ -11,13 +11,11 @@ Each entry must contain a `name` of the hint and a `value` to use.
 ```yaml
 fos_elastica:
     indexes:
-        website:
-            types:
-                user:
-                    persistence:
-                        elastica_to_model_transformer:
-                            hints:
-                                - {name: 'doctrine.customOutputWalker', value: 'Gedmo\Translatable\Query\TreeWalker\TranslationWalker'}
+        user:
+            persistence:
+                elastica_to_model_transformer:
+                    hints:
+                        - {name: 'doctrine.customOutputWalker', value: 'Gedmo\Translatable\Query\TreeWalker\TranslationWalker'}
 ```
 
 This is especially useful if you're using features that require additional information when hydrating an object

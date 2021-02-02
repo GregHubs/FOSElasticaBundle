@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Tests\Unit\Doctrine;
 
 use Doctrine\ORM\EntityManager;
@@ -42,7 +51,7 @@ class ORMPagerProviderTest extends TestCase
         $expectedBuilder = $this->createMock(QueryBuilder::class);
         $expectedBuilder->method('getDQLPart')
             ->with('orderBy')
-            ->willReturn(array($this->createMock(OrderBy::class)));
+            ->willReturn([$this->createMock(OrderBy::class)]);
 
         $repository = $this->createMock(EntityRepository::class);
         $repository
@@ -56,7 +65,6 @@ class ORMPagerProviderTest extends TestCase
             ->method('getRepository')
             ->with($objectClass)
             ->willReturn($repository);
-
 
         $doctrine = $this->createDoctrineMock();
         $doctrine
@@ -83,7 +91,7 @@ class ORMPagerProviderTest extends TestCase
         $expectedBuilder = $this->createMock(QueryBuilder::class);
         $expectedBuilder->method('getDQLPart')
             ->with('orderBy')
-            ->willReturn(array($this->createMock(OrderBy::class)));
+            ->willReturn([$this->createMock(OrderBy::class)]);
 
         $repository = $this->createMock(DoctrineORMCustomRepositoryMock::class);
         $repository
@@ -97,7 +105,6 @@ class ORMPagerProviderTest extends TestCase
             ->method('getRepository')
             ->with($objectClass)
             ->willReturn($repository);
-
 
         $doctrine = $this->createDoctrineMock();
         $doctrine
@@ -121,7 +128,7 @@ class ORMPagerProviderTest extends TestCase
         $expectedBuilder = $this->createMock(QueryBuilder::class);
         $expectedBuilder->method('getDQLPart')
             ->with('orderBy')
-            ->willReturn(array($this->createMock(OrderBy::class)));
+            ->willReturn([$this->createMock(OrderBy::class)]);
 
         $repository = $this->createMock(EntityRepository::class);
         $repository
@@ -135,7 +142,6 @@ class ORMPagerProviderTest extends TestCase
             ->method('getRepository')
             ->with($objectClass)
             ->willReturn($repository);
-
 
         $doctrine = $this->createDoctrineMock();
         $doctrine

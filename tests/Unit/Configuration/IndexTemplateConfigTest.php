@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Tests\Configuration;
 
 use FOS\ElasticaBundle\Configuration\IndexTemplateConfig;
@@ -10,29 +19,41 @@ class IndexTemplateConfigTest extends TestCase
     public function testInstantiate()
     {
         $name = 'index_template1';
-        $config = array(
-            'elasticSearchName' => 'index_template_elastic_name1',
-            'settings' => array(1),
+        $config = [
+            'elasticsearch_name' => 'index_template_elastic_name1',
+            'name' => 'index_template1',
+            'settings' => [1],
             'template' => 't*',
-        );
-        $indexTemplate = new IndexTemplateConfig($name, array(), $config);
+            'config' => [],
+            'mapping' => [],
+        ];
+        $indexTemplate = new IndexTemplateConfig($config);
         $this->assertEquals($name, $indexTemplate->getName());
         $this->assertEquals(
             $config,
-            array(
-                'elasticSearchName' => $indexTemplate->getElasticSearchName(),
+            [
+                'elasticsearch_name' => $indexTemplate->getElasticSearchName(),
+                'name' => $indexTemplate->getName(),
                 'settings' => $indexTemplate->getSettings(),
                 'template' => $indexTemplate->getTemplate(),
-            )
+                'config' => [],
+                'mapping' => [],
+            ]
         );
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testIncorrectInstantiate()
     {
-        $name = 'index_template1';
-        new IndexTemplateConfig($name, array(), array());
+        $config = [
+            'elasticsearch_name' => 'index_template1',
+            'name' => 'index_template_elastic_name1',
+            'settings' => [1],
+            'config' => [],
+            'mapping' => [],
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new IndexTemplateConfig($config);
     }
 }

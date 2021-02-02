@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,12 +11,23 @@
 
 namespace FOS\ElasticaBundle\Tests\Unit\Event;
 
-use FOS\ElasticaBundle\Paginator\HybridPartialResults;
 use Elastica\ResultSet;
+use FOS\ElasticaBundle\Paginator\HybridPartialResults;
 use FOS\ElasticaBundle\Tests\Unit\UnitTestHelper;
 
 class HybridPartialResultsTest extends UnitTestHelper
 {
+    public function testToArray()
+    {
+        $transformer = $this->mockElasticaToModelTransformer();
+
+        $resultSet = $this->mockResultSet();
+
+        $results = new HybridPartialResults($resultSet, $transformer);
+
+        $results->toArray();
+    }
+
     protected function mockResultSet()
     {
         $mock = $this
@@ -30,16 +41,5 @@ class HybridPartialResultsTest extends UnitTestHelper
             ->willReturn([]);
 
         return $mock;
-    }
-
-    public function testToArray()
-    {
-        $transformer = $this->mockElasticaToModelTransformer();
-
-        $resultSet = $this->mockResultSet();
-
-        $results = new HybridPartialResults($resultSet, $transformer);
-
-        $results->toArray();
     }
 }

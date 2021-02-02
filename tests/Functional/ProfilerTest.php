@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,11 @@ use Symfony\Bridge\Twig\Extension\HttpKernelRuntime;
 use Symfony\Bridge\Twig\Extension\RoutingExtension;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Fragment\FragmentHandler;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
 /**
  * @group functional
@@ -30,28 +34,34 @@ class ProfilerTest extends WebTestCase
     /** @var ElasticaLogger */
     private $logger;
 
-    /** @var \Twig_Environment */
+    /** @var Environment */
     private $twig;
 
     /** @var ElasticaDataCollector */
     private $collector;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->logger = new ElasticaLogger($this->createMock(LoggerInterface::class), true);
         $this->collector = new ElasticaDataCollector($this->logger);
 
-        $twigLoaderFilesystem = new \Twig_Loader_Filesystem(__DIR__ . '/../../src/Resources/views/Collector');
-        $twigLoaderFilesystem->addPath(__DIR__ . '/../../vendor/symfony/web-profiler-bundle/Resources/views', 'WebProfiler');
-        $this->twig = new \Twig_Environment($twigLoaderFilesystem, ['debug' => true, 'strict_variables' => true]);
+        $twigLoaderFilesystem = new FilesystemLoader(__DIR__.'/../../src/Resources/views/Collector');
+        $twigLoaderFilesystem->addPath(__DIR__.'/../../vendor/symfony/web-profiler-bundle/Resources/views', 'WebProfiler');
+        $this->twig = new Environment($twigLoaderFilesystem, ['debug' => true, 'strict_variables' => true]);
+
+        $urlGeneratorMock = $this->createMock(UrlGeneratorInterface::class);
+        $fragmentHandlerMock = $this->createMock(FragmentHandler::class);
+        $loaderMock = $this->createMock(RuntimeLoaderInterface::class);
 
         $this->twig->addExtension(new CodeExtension('', '', ''));
-        $this->twig->addExtension(new RoutingExtension($this->getMockBuilder(UrlGeneratorInterface::class)->getMock()));
-        $this->twig->addExtension(new HttpKernelExtension($this->getMockBuilder(FragmentHandler::class)->disableOriginalConstructor()->getMock()));
+        $this->twig->addExtension(new RoutingExtension($urlGeneratorMock));
+        $this->twig->addExtension(new HttpKernelExtension());
 
-        $loader = $this->getMockBuilder(\Twig_RuntimeLoaderInterface::class)->getMock();
-        $loader->method('load')->willReturn($this->getMockBuilder(HttpKernelRuntime::class)->disableOriginalConstructor()->getMock());
-        $this->twig->addRuntimeLoader($loader);
+        $urlGeneratorMock->method('generate')->willReturn('');
+        $fragmentHandlerMock->method('render')->willReturn('');
+        $loaderMock->method('load')->willReturn(new HttpKernelRuntime($fragmentHandlerMock));
+
+        $this->twig->addRuntimeLoader($loaderMock);
     }
 
     /**
@@ -73,17 +83,17 @@ class ProfilerTest extends WebTestCase
             'queries' => $this->logger->getQueries(),
         ]);
 
-        $output = str_replace("&quot;", '"', $output);
+        $output = \str_replace('&quot;', '"', $output);
 
-        $this->assertContains('{"query":{"match_all":', $output);
-        $this->assertContains('index/_search', $output);
-        $this->assertContains('localhost:9200', $output);
+        $this->assertStringContainsString('{"query":{"match_all":', $output);
+        $this->assertStringContainsString('index/_search', $output);
+        $this->assertStringContainsString('localhost:9200', $output);
     }
 
     public function queryProvider()
     {
         return [
-            [json_decode('{"query":{"match_all":{}}}', true)],
+            [\json_decode('{"query":{"match_all":{}}}', true)],
             ['{"query":{"match_all":{}}}'],
         ];
     }

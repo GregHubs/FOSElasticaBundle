@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,27 +11,21 @@
 
 namespace FOS\ElasticaBundle\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
-class IndexEvent extends Event
+abstract class AbstractIndexEvent extends Event
 {
     /**
      * @var string
      */
     private $index;
 
-    /**
-     * @param string $index
-     */
-    public function __construct($index)
+    public function __construct(string $index)
     {
         $this->index = $index;
     }
 
-    /**
-     * @return string
-     */
-    public function getIndex()
+    public function getIndex(): string
     {
         return $this->index;
     }

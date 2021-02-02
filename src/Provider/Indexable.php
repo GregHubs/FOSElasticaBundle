@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -45,18 +45,10 @@ class Indexable implements IndexableInterface
 
     /**
      * Return whether the object is indexable with respect to the callback.
-     *
-     * @param string $indexName
-     * @param string $typeName
-     * @param mixed  $object
-     *
-     * @return bool
      */
-    public function isObjectIndexable($indexName, $typeName, $object)
+    public function isObjectIndexable(string $indexName, object $object): bool
     {
-        $type = sprintf('%s/%s', $indexName, $typeName);
-        $callback = $this->getCallback($type, $object);
-        if (!$callback) {
+        if (!$callback = $this->getCallback($indexName, $object)) {
             return true;
         }
 
@@ -67,48 +59,39 @@ class Indexable implements IndexableInterface
             ]);
         }
 
-        return is_string($callback)
-            ? call_user_func([$object, $callback])
-            : call_user_func($callback, $object);
+        return \is_string($callback)
+            ? \call_user_func([$object, $callback])
+            : \call_user_func($callback, $object);
     }
 
     /**
      * Builds and initialises a callback.
      *
-     * @param string $type
-     * @param object $object
-     *
      * @return callable|string|ExpressionLanguage|null
      */
-    private function buildCallback($type, $object)
+    private function buildCallback(string $index, object $object)
     {
-        if (!array_key_exists($type, $this->callbacks)) {
+        if (!\array_key_exists($index, $this->callbacks)) {
             return null;
         }
 
-        $callback = $this->callbacks[$type];
+        $callback = $this->callbacks[$index];
 
-        if (is_callable($callback) or is_callable([$object, $callback])) {
+        if (\is_callable($callback) or \is_callable([$object, $callback])) {
             return $callback;
         }
 
-        if (is_string($callback)) {
-            return $this->buildExpressionCallback($type, $object, $callback);
+        if (\is_string($callback)) {
+            return $this->buildExpressionCallback($index, $object, $callback);
         }
 
-        throw new \InvalidArgumentException(sprintf('Callback for type "%s" is not a valid callback.', $type));
+        throw new \InvalidArgumentException(\sprintf('Callback for index "%s" is not a valid callback.', $index));
     }
 
     /**
      * Processes a string expression into an Expression.
-     *
-     * @param string $type
-     * @param mixed  $object
-     * @param string $callback
-     *
-     * @return Expression
      */
-    private function buildExpressionCallback($type, $object, $callback)
+    private function buildExpressionCallback(string $index, object $object, string $callback): Expression
     {
         $expression = $this->getExpressionLanguage();
         if (!$expression) {
@@ -123,36 +106,28 @@ class Indexable implements IndexableInterface
 
             return $callback;
         } catch (SyntaxError $e) {
-            throw new \InvalidArgumentException(sprintf(
-                'Callback for type "%s" is an invalid expression',
-                $type
-            ), $e->getCode(), $e);
+            throw new \InvalidArgumentException(\sprintf('Callback for index "%s" is an invalid expression', $index), $e->getCode(), $e);
         }
     }
 
     /**
      * Retreives a cached callback, or creates a new callback if one is not found.
      *
-     * @param string $type
-     * @param object $object
-     *
      * @return mixed
      */
-    private function getCallback($type, $object)
+    private function getCallback(string $index, object $object)
     {
-        if (!array_key_exists($type, $this->initialisedCallbacks)) {
-            $this->initialisedCallbacks[$type] = $this->buildCallback($type, $object);
+        if (!\array_key_exists($index, $this->initialisedCallbacks)) {
+            $this->initialisedCallbacks[$index] = $this->buildCallback($index, $object);
         }
 
-        return $this->initialisedCallbacks[$type];
+        return $this->initialisedCallbacks[$index];
     }
 
     /**
      * Returns the ExpressionLanguage class if it is available.
-     *
-     * @return ExpressionLanguage|null
      */
-    private function getExpressionLanguage()
+    private function getExpressionLanguage(): ?ExpressionLanguage
     {
         if (null === $this->expressionLanguage) {
             $this->expressionLanguage = new ExpressionLanguage();
@@ -166,17 +141,15 @@ class Indexable implements IndexableInterface
      * component to parse and evaluate an expression.
      *
      * @param mixed $object
-     *
-     * @return string
      */
-    private function getExpressionVar($object = null)
+    private function getExpressionVar($object = null): string
     {
-        if (!is_object($object)) {
+        if (!\is_object($object)) {
             return 'object';
         }
 
         $ref = new \ReflectionClass($object);
 
-        return strtolower($ref->getShortName());
+        return \strtolower($ref->getShortName());
     }
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,7 +11,7 @@
 
 namespace FOS\ElasticaBundle\Tests\Unit\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use FOS\ElasticaBundle\Doctrine\RepositoryManager;
 use FOS\ElasticaBundle\Finder\TransformedFinder;
 use FOS\ElasticaBundle\Manager\RepositoryManagerInterface;
@@ -38,11 +38,11 @@ class RepositoryManagerTest extends TestCase
         $mainManager = $this->createMock(RepositoryManagerInterface::class);
 
         $mainManager->method('getRepository')
-            ->with($this->equalTo('index/type'))
+            ->with($this->equalTo('index'))
             ->willReturn(new Repository($finderMock));
 
         $manager = new RepositoryManager($registryMock, $mainManager);
-        $manager->addEntity(NamespacedEntity::class, 'index/type');
+        $manager->addEntity(NamespacedEntity::class, 'index');
         $repository = $manager->getRepository(NamespacedEntity::class);
         $this->assertInstanceOf(Repository::class, $repository);
     }
@@ -58,11 +58,11 @@ class RepositoryManagerTest extends TestCase
             ->willReturn((new \ReflectionClass(NamespacedEntity::class))->getNamespaceName());
 
         $mainManager->method('getRepository')
-            ->with($this->equalTo('index/type'))
+            ->with($this->equalTo('index'))
             ->willReturn(new Repository($finderMock));
 
         $manager = new RepositoryManager($registryMock, $mainManager);
-        $manager->addEntity(NamespacedEntity::class, 'index/type');
+        $manager->addEntity(NamespacedEntity::class, 'index');
         $repository = $manager->getRepository('FOSElasticaBundle:NamespacedEntity');
         $this->assertInstanceOf(Repository::class, $repository);
     }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class ConfigSourcePass implements CompilerPassInterface
 {
-    const SOURCE_TYPE_INDEX_TEMPLATE = 'index_template';
+    public const SOURCE_TYPE_INDEX_TEMPLATE = 'index_template';
 
     /**
      * {@inheritdoc}
@@ -30,9 +30,9 @@ class ConfigSourcePass implements CompilerPassInterface
 
         $indexSources = [];
         $indexTemplateSources = [];
-        foreach (array_keys($container->findTaggedServiceIds('fos_elastica.config_source')) as $id) {
+        foreach (\array_keys($container->findTaggedServiceIds('fos_elastica.config_source')) as $id) {
             $tag = $container->findDefinition($id)->getTag('fos_elastica.config_source');
-            if (isset($tag[0]['source']) && $tag[0]['source'] === self::SOURCE_TYPE_INDEX_TEMPLATE) {
+            if (isset($tag[0]['source']) && self::SOURCE_TYPE_INDEX_TEMPLATE === $tag[0]['source']) {
                 $indexTemplateSources[] = new Reference($id);
             } else {
                 $indexSources[] = new Reference($id);

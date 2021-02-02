@@ -1,4 +1,14 @@
 <?php
+
+/*
+ * This file is part of the FOSElasticaBundle package.
+ *
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace FOS\ElasticaBundle\Provider;
 
 use Pagerfanta\Pagerfanta;
@@ -18,15 +28,15 @@ class PagerfantaPager implements PagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getNbResults()
+    public function getNbResults(): int
     {
-        return $this->pagerfanta->getNbResults(); 
+        return $this->pagerfanta->getNbResults();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getNbPages()
+    public function getNbPages(): int
     {
         return $this->pagerfanta->getNbPages();
     }
@@ -34,7 +44,7 @@ class PagerfantaPager implements PagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getCurrentPage()
+    public function getCurrentPage(): int
     {
         return $this->pagerfanta->getCurrentPage();
     }
@@ -42,7 +52,7 @@ class PagerfantaPager implements PagerInterface
     /**
      * {@inheritdoc}
      */
-    public function setCurrentPage($page)
+    public function setCurrentPage(int $page)
     {
         $this->pagerfanta->setCurrentPage($page);
     }
@@ -50,7 +60,7 @@ class PagerfantaPager implements PagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getMaxPerPage()
+    public function getMaxPerPage(): int
     {
         return $this->pagerfanta->getMaxPerPage();
     }
@@ -58,7 +68,7 @@ class PagerfantaPager implements PagerInterface
     /**
      * {@inheritdoc}
      */
-    public function setMaxPerPage($perPage)
+    public function setMaxPerPage(int $perPage)
     {
         $this->pagerfanta->setMaxPerPage($perPage);
     }
@@ -71,10 +81,7 @@ class PagerfantaPager implements PagerInterface
         return $this->pagerfanta->getCurrentPageResults();
     }
 
-    /**
-     * @return Pagerfanta
-     */
-    public function getPagerfanta()
+    public function getPagerfanta(): Pagerfanta
     {
         return $this->pagerfanta;
     }

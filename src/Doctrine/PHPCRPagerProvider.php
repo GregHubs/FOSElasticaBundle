@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,15 +11,16 @@
 
 namespace FOS\ElasticaBundle\Doctrine;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use FOS\ElasticaBundle\Provider\PagerfantaPager;
+use FOS\ElasticaBundle\Provider\PagerInterface;
 use FOS\ElasticaBundle\Provider\PagerProviderInterface;
 use Pagerfanta\Adapter\DoctrineODMPhpcrAdapter;
 use Pagerfanta\Pagerfanta;
 
 final class PHPCRPagerProvider implements PagerProviderInterface
 {
-    const ENTITY_ALIAS = 'a';
+    public const ENTITY_ALIAS = 'a';
 
     /**
      * @var string
@@ -35,17 +36,14 @@ final class PHPCRPagerProvider implements PagerProviderInterface
      * @var array
      */
     private $baseOptions;
-    
+
     /**
      * @var RegisterListenersService
      */
     private $registerListenersService;
 
     /**
-     * @param ManagerRegistry $doctrine
-     * @param RegisterListenersService $registerListenersService
      * @param string $objectClass
-     * @param array $baseOptions
      */
     public function __construct(ManagerRegistry $doctrine, RegisterListenersService $registerListenersService, $objectClass, array $baseOptions)
     {
@@ -58,19 +56,19 @@ final class PHPCRPagerProvider implements PagerProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function provide(array $options = array())
+    public function provide(array $options = []): PagerInterface
     {
-        $options = array_replace($this->baseOptions, $options);
+        $options = \array_replace($this->baseOptions, $options);
 
         $manager = $this->doctrine->getManagerForClass($this->objectClass);
         $repository = $manager->getRepository($this->objectClass);
-        
+
         $adapter = new DoctrineODMPhpcrAdapter(
-            call_user_func([$repository, $options['query_builder_method']], static::ENTITY_ALIAS)
+            \call_user_func([$repository, $options['query_builder_method']], static::ENTITY_ALIAS)
         );
-        
+
         $pager = new PagerfantaPager(new Pagerfanta($adapter));
-        
+
         $this->registerListenersService->register($manager, $pager, $options);
 
         return $pager;

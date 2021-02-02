@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -61,7 +61,6 @@ class RawPaginatorAdapter implements PaginatorAdapterInterface
      *
      * @param SearchableInterface $searchable the object to search in
      * @param Query               $query      the query to search
-     * @param array               $options
      */
     public function __construct(SearchableInterface $searchable, Query $query, array $options = [])
     {
@@ -94,7 +93,7 @@ class RawPaginatorAdapter implements PaginatorAdapterInterface
         }
 
         return $this->query->hasParam('size') && !$genuineTotal
-            ? min($this->totalHits, (int) $this->query->getParam('size'))
+            ? \min($this->totalHits, (int) $this->query->getParam('size'))
             : $this->totalHits;
     }
 

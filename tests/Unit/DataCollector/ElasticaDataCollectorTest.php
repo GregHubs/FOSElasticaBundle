@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -33,7 +33,7 @@ class ElasticaDataCollectorTest extends UnitTestHelper
         /** @var $loggerMock \PHPUnit_Framework_MockObject_MockObject|ElasticaLogger */
         $loggerMock = $this->createMock(ElasticaLogger::class);
 
-        $totalQueries = rand();
+        $totalQueries = \rand();
 
         $loggerMock->expects($this->once())
             ->method('getNbQueries')

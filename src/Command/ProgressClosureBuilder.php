@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,20 +22,12 @@ final class ProgressClosureBuilder
     /**
      * Builds a loggerClosure to be called from inside the Provider to update the command
      * line.
-     *
-     * @param OutputInterface $output
-     * @param string          $action
-     * @param string          $index
-     * @param string          $type
-     * @param int             $offset
-     *
-     * @return callable
      */
-    public static function build(OutputInterface $output, $action, $index, $type, $offset)
+    public static function build(OutputInterface $output, string $action, string $index, int $offset): \Closure
     {
         $progress = null;
 
-        return function ($increment, $totalObjects, $message = null) use (&$progress, $output, $action, $index, $type, $offset) {
+        return function ($increment, $totalObjects, $message = null) use (&$progress, $output, $action, $index, $offset) {
             if (null === $progress) {
                 $progress = new ProgressBar($output, $totalObjects);
                 $progress->start();
@@ -44,11 +36,11 @@ final class ProgressClosureBuilder
 
             if (null !== $message) {
                 $progress->clear();
-                $output->writeln(sprintf('<info>%s</info> <error>%s</error>', $action, $message));
+                $output->writeln(\sprintf('<info>%s</info> <error>%s</error>', $action, $message));
                 $progress->display();
             }
 
-            $progress->setMessage(sprintf('<info>%s</info> <comment>%s/%s</comment>', $action, $index, $type));
+            $progress->setMessage(\sprintf('<info>%s</info> <comment>%s</comment>', $action, $index));
             $progress->advance($increment);
         };
     }

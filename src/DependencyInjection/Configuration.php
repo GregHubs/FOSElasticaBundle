@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    const SUPPORTED_DRIVERS = ['orm', 'mongodb', 'phpcr'];
+    private const SUPPORTED_DRIVERS = ['orm', 'mongodb', 'phpcr'];
 
     /**
      * If the kernel is running in debug mode.
@@ -26,7 +26,7 @@ class Configuration implements ConfigurationInterface
      */
     private $debug;
 
-    public function __construct($debug)
+    public function __construct(bool $debug)
     {
         $this->debug = $debug;
     }
@@ -39,13 +39,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder('fos_elastica');
-
-        if (method_exists($treeBuilder, 'getRootNode')) {
-            $rootNode = $treeBuilder->getRootNode();
-        } else {
-            // BC layer for symfony/config 4.1 and older
-            $rootNode = $treeBuilder->root('fos_elastica');
-        }
+        $rootNode = $treeBuilder->getRootNode();
 
         $this->addClientsSection($rootNode);
         $this->addIndexesSection($rootNode);
@@ -60,6 +54,12 @@ class Configuration implements ConfigurationInterface
                     ->info('Defaults to the first index defined')
                 ->end()
                 ->scalarNode('default_manager')->defaultValue('orm')->end()
+                ->arrayNode('messenger')
+                    ->canBeEnabled()
+                    ->children()
+                        ->scalarNode('bus')->defaultValue('messenger.default_bus')->end()
+                    ->end()
+                ->end()
                 ->arrayNode('serializer')
                     ->treatNullLike([])
                     ->children()
@@ -97,65 +97,6 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
-            ->end()
-        ;
-
-        return $node;
-    }
-
-    /**
-     * Returns the array node used for "types".
-     */
-    private function getTypesNode()
-    {
-        $node = $this->createTreeBuilderNode('types');
-
-        $node
-            ->useAttributeAsKey('name')
-            ->prototype('array')
-                ->treatNullLike([])
-                ->beforeNormalization()
-                ->ifNull()
-                    ->thenEmptyArray()
-                ->end()
-                // Support multiple dynamic_template formats to match the old bundle style
-                // and the way ElasticSearch expects them
-                ->beforeNormalization()
-                ->ifTrue(function ($v) {
-                    return isset($v['dynamic_templates']);
-                })
-                ->then(function ($v) {
-                    $dt = [];
-                    foreach ($v['dynamic_templates'] as $key => $type) {
-                        if (is_int($key)) {
-                            $dt[] = $type;
-                        } else {
-                            $dt[][$key] = $type;
-                        }
-                    }
-
-                    $v['dynamic_templates'] = $dt;
-
-                    return $v;
-                })
-                ->end()
-                ->children()
-                    ->booleanNode('date_detection')->end()
-                    ->arrayNode('dynamic_date_formats')->prototype('scalar')->end()->end()
-                    ->scalarNode('analyzer')->end()
-                    ->booleanNode('numeric_detection')->end()
-                    ->scalarNode('dynamic')->end()
-                    ->variableNode('indexable_callback')->end()
-                    ->append($this->getPersistenceNode())
-                    ->append($this->getSerializerNode())
-                ->end()
-                ->append($this->getIdNode())
-                ->append($this->getPropertiesNode())
-                ->append($this->getDynamicTemplateNode())
-                ->append($this->getSourceNode())
-                ->append($this->getRoutingNode())
-                ->append($this->getParentNode())
-                ->append($this->getAllNode())
             ->end()
         ;
 
@@ -237,41 +178,6 @@ class Configuration implements ConfigurationInterface
     }
 
     /**
-     * Returns the array node used for "_parent".
-     */
-    private function getParentNode()
-    {
-        $node = $this->createTreeBuilderNode('_parent');
-
-        $node
-            ->children()
-                ->scalarNode('type')->end()
-                ->scalarNode('property')->defaultValue(null)->end()
-                ->scalarNode('identifier')->defaultValue('id')->end()
-            ->end()
-        ;
-
-        return $node;
-    }
-
-    /**
-     * Returns the array node used for "_all".
-     */
-    private function getAllNode()
-    {
-        $node = $this->createTreeBuilderNode('_all');
-
-        $node
-            ->children()
-            ->scalarNode('enabled')->defaultValue(true)->end()
-            ->scalarNode('analyzer')->end()
-            ->end()
-        ;
-
-        return $node;
-    }
-
-    /**
      * @return ArrayNodeDefinition|\Symfony\Component\Config\Definition\Builder\NodeDefinition
      */
     private function getPersistenceNode()
@@ -290,7 +196,7 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue('orm')
                     ->validate()
                     ->ifNotInArray(self::SUPPORTED_DRIVERS)
-                        ->thenInvalid('The driver %s is not supported. Please choose one of '.json_encode(self::SUPPORTED_DRIVERS))
+                        ->thenInvalid('The driver %s is not supported. Please choose one of '.\json_encode(self::SUPPORTED_DRIVERS))
                     ->end()
                 ->end()
                 ->scalarNode('model')->defaultValue(null)->end()
@@ -301,7 +207,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('batch_size')->defaultValue(100)->end()
                         ->scalarNode('clear_object_manager')->defaultTrue()->end()
-                        ->scalarNode('debug_logging')
+                        ->booleanNode('debug_logging')
                             ->defaultValue($this->debug)
                             ->treatNullLike(true)
                         ->end()
@@ -310,9 +216,8 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->arrayNode('listener')
-                    ->addDefaultsIfNotSet()
+                    ->canBeDisabled()
                     ->children()
-                        ->booleanNode('enabled')->defaultTrue()->end()
                         ->scalarNode('insert')->defaultTrue()->end()
                         ->scalarNode('update')->defaultTrue()->end()
                         ->scalarNode('delete')->defaultTrue()->end()
@@ -424,7 +329,7 @@ class Configuration implements ConfigurationInterface
                         // If there is no connections array key defined, assume a single connection.
                         ->beforeNormalization()
                         ->ifTrue(function ($v) {
-                            return is_array($v) && !array_key_exists('connections', $v);
+                            return \is_array($v) && !\array_key_exists('connections', $v);
                         })
                         ->then(function ($v) {
                             return [
@@ -441,7 +346,7 @@ class Configuration implements ConfigurationInterface
                                         ->scalarNode('url')
                                             ->validate()
                                                 ->ifTrue(function ($url) {
-                                                    return $url && '/' !== substr($url, -1);
+                                                    return $url && '/' !== \substr($url, -1);
                                                 })
                                                 ->then(function ($url) {
                                                     return $url.'/';
@@ -453,10 +358,11 @@ class Configuration implements ConfigurationInterface
                                         ->scalarNode('host')->end()
                                         ->scalarNode('port')->end()
                                         ->scalarNode('proxy')->end()
+                                        ->scalarNode('auth_type')->end()
                                         ->arrayNode('http_error_codes')
                                             ->beforeNormalization()
-                                                ->ifTrue(function ($v) { return !is_array($v); })
-                                                ->then(function ($v) { return array($v); })
+                                                ->ifTrue(function ($v) { return !\is_array($v); })
+                                                ->then(function ($v) { return [$v]; })
                                             ->end()
                                             ->requiresAtLeastOneElement()
                                             ->defaultValue([400, 403, 404])
@@ -479,8 +385,9 @@ class Configuration implements ConfigurationInterface
                                             ->prototype('scalar')->end()
                                         ->end()
                                         ->arrayNode('curl')
-                                            ->useAttributeAsKey(CURLOPT_SSL_VERIFYPEER)
-                                            ->prototype('boolean')->end()
+                                            ->normalizeKeys(false)
+                                            ->useAttributeAsKey('name')
+                                            ->prototype('scalar')->end()
                                         ->end()
                                         ->scalarNode('transport')->end()
                                         ->scalarNode('timeout')->end()
@@ -514,17 +421,46 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('indexes')
                     ->useAttributeAsKey('name')
                     ->prototype('array')
+                        ->treatNullLike([])
+                        ->beforeNormalization()
+                        ->ifNull()
+                        ->thenEmptyArray()
+                        ->end()
+                        // Support multiple dynamic_template formats to match the old bundle style
+                        // and the way ElasticSearch expects them
+                        ->beforeNormalization()
+                        ->ifTrue(function ($v) {
+                            return isset($v['dynamic_templates']);
+                        })
+                        ->then(function ($v) {
+                            $dt = [];
+                            foreach ($v['dynamic_templates'] as $key => $type) {
+                                if (\is_int($key)) {
+                                    $dt[] = $type;
+                                } else {
+                                    $dt[][$key] = $type;
+                                }
+                            }
+
+                            $v['dynamic_templates'] = $dt;
+
+                            return $v;
+                        })
+                        ->end()
                         ->children()
                             ->scalarNode('index_name')
                                 ->info('Defaults to the name of the index, but can be modified if the index name is different in ElasticSearch')
                             ->end()
+                            ->variableNode('indexable_callback')->end()
                             ->booleanNode('use_alias')->defaultValue(false)->end()
                             ->scalarNode('client')->end()
                             ->scalarNode('finder')
                                 ->treatNullLike(true)
                                 ->defaultFalse()
                             ->end()
-                            ->arrayNode('type_prototype')
+                            ->append($this->getPersistenceNode())
+                            ->append($this->getSerializerNode())
+                            ->arrayNode('index_prototype')
                                 ->children()
                                     ->scalarNode('analyzer')->end()
                                     ->append($this->getPersistenceNode())
@@ -532,8 +468,17 @@ class Configuration implements ConfigurationInterface
                                 ->end()
                             ->end()
                             ->variableNode('settings')->defaultValue([])->end()
+                            ->booleanNode('date_detection')->end()
+                            ->arrayNode('dynamic_date_formats')->prototype('scalar')->end()->end()
+                            ->scalarNode('analyzer')->end()
+                            ->booleanNode('numeric_detection')->end()
+                            ->scalarNode('dynamic')->end()
                         ->end()
-                        ->append($this->getTypesNode())
+                        ->append($this->getIdNode())
+                        ->append($this->getPropertiesNode())
+                        ->append($this->getDynamicTemplateNode())
+                        ->append($this->getSourceNode())
+                        ->append($this->getRoutingNode())
                     ->end()
                 ->end()
             ->end()
@@ -545,22 +490,11 @@ class Configuration implements ConfigurationInterface
      */
     private function createTreeBuilderNode($name)
     {
-        $builder = new TreeBuilder($name);
-
-        if (method_exists($builder, 'getRootNode')) {
-            $node = $builder->getRootNode();
-        } else {
-            // BC layer for symfony/config 4.1 and older
-            $node = $builder->root($name);
-        }
-
-        return $node;
+        return (new TreeBuilder($name))->getRootNode();
     }
 
     /**
      * Adds the configuration for the "index_templates" key.
-     *
-     * @param ArrayNodeDefinition $rootNode
      *
      * @return void
      */
@@ -572,6 +506,32 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('index_templates')
                     ->useAttributeAsKey('name')
                     ->prototype('array')
+                        ->treatNullLike([])
+                        ->beforeNormalization()
+                        ->ifNull()
+                        ->thenEmptyArray()
+                        ->end()
+                        // Support multiple dynamic_template formats to match the old bundle style
+                        // and the way ElasticSearch expects them
+                        ->beforeNormalization()
+                        ->ifTrue(function ($v) {
+                            return isset($v['dynamic_templates']);
+                        })
+                        ->then(function ($v) {
+                            $dt = [];
+                            foreach ($v['dynamic_templates'] as $key => $type) {
+                                if (\is_int($key)) {
+                                    $dt[] = $type;
+                                } else {
+                                    $dt[][$key] = $type;
+                                }
+                            }
+
+                            $v['dynamic_templates'] = $dt;
+
+                            return $v;
+                        })
+                        ->end()
                         ->children()
                             ->scalarNode('template_name')
                                 ->info('Defaults to the name of the index template, but can be modified if the index name is different in ElasticSearch')
@@ -579,8 +539,17 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode('template')->isRequired()->end()
                             ->scalarNode('client')->end()
                             ->variableNode('settings')->defaultValue([])->end()
+                            ->booleanNode('date_detection')->end()
+                            ->arrayNode('dynamic_date_formats')->prototype('scalar')->end()->end()
+                            ->scalarNode('analyzer')->end()
+                            ->booleanNode('numeric_detection')->end()
+                            ->scalarNode('dynamic')->end()
                         ->end()
-                        ->append($this->getTypesNode())
+                        ->append($this->getIdNode())
+                        ->append($this->getPropertiesNode())
+                        ->append($this->getDynamicTemplateNode())
+                        ->append($this->getSourceNode())
+                        ->append($this->getRoutingNode())
                     ->end()
                 ->end()
             ->end()

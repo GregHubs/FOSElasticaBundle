@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -62,7 +62,7 @@ class CreateCommandTest extends TestCase
      */
     private $index;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->indexManager = $this->createMock(IndexManager::class);
         $this->mappingBuilder = $this->createMock(MappingBuilder::class);
@@ -91,10 +91,11 @@ class CreateCommandTest extends TestCase
         $output->expects($this->once())->method('writeln');
         $this->configManager->expects($this->once())->method('getIndexConfiguration')->with($indexName)->willReturn($this->indexConfig);
         $this->indexManager->expects($this->once())->method('getIndex')->with($indexName)->willReturn($this->index);
-        $this->indexConfig->expects($this->once())->method('isUseAlias')->willReturn(true);
+        $this->indexConfig->expects($this->exactly(2))->method('isUseAlias')->willReturn(true);
         $this->aliasProcessor->expects($this->once())->method('setRootName')->with($this->indexConfig, $this->index);
         $this->mappingBuilder->expects($this->once())->method('buildIndexMapping')->with($this->indexConfig)->willReturn($mapping);
         $this->index->expects($this->once())->method('create')->with(['mapping'], false);
+        $this->index->expects($this->once())->method('addAlias')->with($indexName);
 
         $this->command->run($input, $output);
     }
@@ -111,10 +112,11 @@ class CreateCommandTest extends TestCase
         $output->expects($this->once())->method('writeln');
         $this->configManager->expects($this->once())->method('getIndexConfiguration')->with($indexName)->willReturn($this->indexConfig);
         $this->indexManager->expects($this->once())->method('getIndex')->with($indexName)->willReturn($this->index);
-        $this->indexConfig->expects($this->once())->method('isUseAlias')->willReturn(false);
+        $this->indexConfig->expects($this->exactly(2))->method('isUseAlias')->willReturn(false);
         $this->aliasProcessor->expects($this->never())->method('setRootName');
         $this->mappingBuilder->expects($this->once())->method('buildIndexMapping')->with($this->indexConfig)->willReturn($mapping);
         $this->index->expects($this->once())->method('create')->with(['mapping'], false);
+        $this->index->expects($this->never())->method('addAlias');
 
         $this->command->run($input, $output);
     }
@@ -133,7 +135,7 @@ class CreateCommandTest extends TestCase
         $mapping = ['mapping'];
 
         $input->expects($this->once())->method('getOption')->with('index')->willReturn($indexName);
-        $this->indexManager->expects($this->once())->method('getAllIndexes')->willReturn(array_flip($indices));
+        $this->indexManager->expects($this->once())->method('getAllIndexes')->willReturn(\array_flip($indices));
         $output->expects($this->exactly(2))->method('writeln');
 
         $this->configManager->expects($this->exactly(2))->method('getIndexConfiguration')
@@ -144,8 +146,8 @@ class CreateCommandTest extends TestCase
             ->withConsecutive(['foo'], ['bar'])
             ->willReturnOnConsecutiveCalls($index1, $index2);
 
-        $indexConfig1->expects($this->once())->method('isUseAlias')->willReturn(false);
-        $indexConfig2->expects($this->once())->method('isUseAlias')->willReturn(false);
+        $indexConfig1->expects($this->exactly(2))->method('isUseAlias')->willReturn(false);
+        $indexConfig2->expects($this->exactly(2))->method('isUseAlias')->willReturn(false);
 
         $this->aliasProcessor->expects($this->never())->method('setRootName');
 
@@ -154,7 +156,9 @@ class CreateCommandTest extends TestCase
             ->willReturn($mapping);
 
         $index1->expects($this->once())->method('create')->with(['mapping'], false);
+        $index1->expects($this->never())->method('addAlias');
         $index2->expects($this->once())->method('create')->with(['mapping'], false);
+        $index2->expects($this->never())->method('addAlias');
 
         $this->command->run($input, $output);
     }

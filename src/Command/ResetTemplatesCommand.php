@@ -3,7 +3,7 @@
 /*
  * This file is part of the FOSElasticaBundle package.
  *
- * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ * (c) FriendsOfSymfony <https://friendsofsymfony.github.com/>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -53,7 +53,7 @@ final class ResetTemplatesCommand extends Command
                 'force-delete',
                 null,
                 InputOption::VALUE_NONE,
-                'Delete all indexes that matches index templates patterns. ' .
+                'Delete all indexes that matches index templates patterns. '.
                 'Aware that pattern may match various indexes.'
             )
             ->setDescription('Reset search indexes templates')
@@ -78,7 +78,7 @@ final class ResetTemplatesCommand extends Command
         }
 
         if (null !== $indexTemplate) {
-            $output->writeln(sprintf('<info>Resetting template</info> <comment>%s</comment>', $indexTemplate));
+            $output->writeln(\sprintf('<info>Resetting template</info> <comment>%s</comment>', $indexTemplate));
             $this->resetter->resetIndex($indexTemplate, $deleteByPattern);
         } else {
             $output->writeln('<info>Resetting all templates</info>');
