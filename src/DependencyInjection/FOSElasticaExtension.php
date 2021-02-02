@@ -476,7 +476,8 @@ class FOSElasticaExtension extends Extension
             $serviceDef->replaceArgument($i, $argument);
         }
 
-        $serviceDef->addTag('fos_elastica.persister', ['index' => $indexName]);
+        $serviceDef->addTag('fos_elastica.persister', ['index' => $indexName, 'type' => $typeName]);
+        $serviceDef->setPublic(true);
 
         $container->setDefinition($serviceId, $serviceDef);
 
@@ -512,8 +513,9 @@ class FOSElasticaExtension extends Extension
         /* Note: provider services may conflict with "prototype.driver", if the
          * index and type names were "prototype" and a driver, respectively.
          */
-        $providerId = \sprintf('fos_elastica.pager_provider.%s', $indexName);
-        $providerDef->addTag('fos_elastica.pager_provider', ['index' => $indexName]);
+        $providerId = sprintf('fos_elastica.pager_provider.%s.%s', $indexName, $typeName);
+        $providerDef->addTag('fos_elastica.pager_provider', ['index' => $indexName, 'type' => $typeName]);
+        $providerDef->setPublic(true);
 
         $container->setDefinition($providerId, $providerDef);
 

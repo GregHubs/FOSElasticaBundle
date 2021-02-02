@@ -18,7 +18,9 @@ use FOS\ElasticaBundle\Persister\Event\PreFetchObjectsEvent;
 use FOS\ElasticaBundle\Persister\Event\PreInsertObjectsEvent;
 use FOS\ElasticaBundle\Persister\Event\PrePersistEvent;
 use FOS\ElasticaBundle\Provider\PagerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as LegacyEventDispatcherInterface;
+use Symfony\Component\EventDispatcher\LegacyEventDispatcherProxy;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class InPlacePagerPersister implements PagerPersisterInterface
 {
@@ -30,11 +32,15 @@ final class InPlacePagerPersister implements PagerPersisterInterface
     private $registry;
 
     /**
-     * @var EventDispatcherInterface
+     * @var EventDispatcherInterface|LegacyEventDispatcherInterface
      */
     private $dispatcher;
 
-    public function __construct(PersisterRegistry $registry, EventDispatcherInterface $dispatcher)
+    /**
+     * @param PersisterRegistry $registry
+     * @param EventDispatcherInterface|LegacyEventDispatcherInterface $dispatcher
+     */
+    public function __construct(PersisterRegistry $registry, $dispatcher)
     {
         $this->registry = $registry;
         $this->dispatcher = $dispatcher;
@@ -58,7 +64,8 @@ final class InPlacePagerPersister implements PagerPersisterInterface
         $objectPersister = $this->registry->getPersister($options['indexName']);
 
         try {
-            $this->dispatcher->dispatch($event = new PrePersistEvent($pager, $objectPersister, $options));
+            $event = new PrePersistEvent($pager, $objectPersister, $options);
+            $this->dispatch($event, Events::PRE_PERSIST);
             $pager = $event->getPager();
             $options = $event->getOptions();
 
@@ -72,7 +79,8 @@ final class InPlacePagerPersister implements PagerPersisterInterface
                 ++$page;
             } while ($page <= $lastPage);
         } finally {
-            $this->dispatcher->dispatch(new PostPersistEvent($pager, $objectPersister, $options));
+            $event = new PostPersistEvent($pager, $objectPersister, $options);
+            $this->dispatch($event, Events::POST_PERSIST);
         }
     }
 
@@ -83,7 +91,8 @@ final class InPlacePagerPersister implements PagerPersisterInterface
     {
         $pager->setCurrentPage($page);
 
-        $this->dispatcher->dispatch($event = new PreFetchObjectsEvent($pager, $objectPersister, $options));
+        $event = new PreFetchObjectsEvent($pager, $objectPersister, $options);
+        $this->dispatch($event, Events::PRE_FETCH_OBJECTS);
         $pager = $event->getPager();
         $options = $event->getOptions();
 
@@ -93,7 +102,8 @@ final class InPlacePagerPersister implements PagerPersisterInterface
             $objects = \iterator_to_array($objects);
         }
 
-        $this->dispatcher->dispatch($event = new PreInsertObjectsEvent($pager, $objectPersister, $objects, $options));
+        $event = new PreInsertObjectsEvent($pager, $objectPersister, $objects, $options);
+        $this->dispatch($event, Events::PRE_INSERT_OBJECTS);
         $pager = $event->getPager();
         $options = $event->getOptions();
         $objects = $event->getObjects();
@@ -103,17 +113,31 @@ final class InPlacePagerPersister implements PagerPersisterInterface
                 $objectPersister->insertMany($objects);
             }
 
-            $this->dispatcher->dispatch(new PostInsertObjectsEvent($pager, $objectPersister, $objects, $options));
+            $event = new PostInsertObjectsEvent($pager, $objectPersister, $objects, $options);
+            $this->dispatch($event, Events::POST_INSERT_OBJECTS);
         } catch (\Exception $e) {
-            $this->dispatcher->dispatch($event = new OnExceptionEvent($pager, $objectPersister, $e, $objects, $options));
+            $event = new OnExceptionEvent($pager, $objectPersister, $e, $objects, $options);
+            $this->dispatch($event, Events::ON_EXCEPTION);
 
             if ($event->isIgnored()) {
-                $this->dispatcher->dispatch(new PostInsertObjectsEvent($pager, $objectPersister, $objects, $options));
+                $event = new PostInsertObjectsEvent($pager, $objectPersister, $objects, $options);
+                $this->dispatch($event, Events::POST_INSERT_OBJECTS);
             } else {
                 $e = $event->getException();
 
                 throw $e;
             }
+        }
+    }
+
+    private function dispatch($event, $eventName): void
+    {
+        if ($this->dispatcher instanceof EventDispatcherInterface) {
+            // Symfony >= 4.3
+            $this->dispatcher->dispatch($event, $eventName);
+        } else {
+            // Symfony 3.4
+            $this->dispatcher->dispatch($eventName, $event);
         }
     }
 }

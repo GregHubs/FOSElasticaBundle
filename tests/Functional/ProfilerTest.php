@@ -22,8 +22,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Fragment\FragmentHandler;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use Twig\Environment;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
 /**
@@ -45,23 +45,23 @@ class ProfilerTest extends WebTestCase
         $this->logger = new ElasticaLogger($this->createMock(LoggerInterface::class), true);
         $this->collector = new ElasticaDataCollector($this->logger);
 
-        $twigLoaderFilesystem = new FilesystemLoader(__DIR__.'/../../src/Resources/views/Collector');
-        $twigLoaderFilesystem->addPath(__DIR__.'/../../vendor/symfony/web-profiler-bundle/Resources/views', 'WebProfiler');
+        $twigLoaderFilesystem = new FilesystemLoader(__DIR__ . '/../../src/Resources/views/Collector');
+        $twigLoaderFilesystem->addPath(__DIR__ . '/../../vendor/symfony/web-profiler-bundle/Resources/views', 'WebProfiler');
         $this->twig = new Environment($twigLoaderFilesystem, ['debug' => true, 'strict_variables' => true]);
 
-        $urlGeneratorMock = $this->createMock(UrlGeneratorInterface::class);
-        $fragmentHandlerMock = $this->createMock(FragmentHandler::class);
-        $loaderMock = $this->createMock(RuntimeLoaderInterface::class);
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $urlGenerator->method('generate')->willReturn('');
+        $fragmentHandler = $this->createMock(FragmentHandler::class);
+        $fragmentHandler->method('render')->willReturn('');
 
         $this->twig->addExtension(new CodeExtension('', '', ''));
-        $this->twig->addExtension(new RoutingExtension($urlGeneratorMock));
-        $this->twig->addExtension(new HttpKernelExtension());
+        $this->twig->addExtension(new RoutingExtension($urlGenerator));
+        $this->twig->addExtension(new HttpKernelExtension($fragmentHandler));
 
-        $urlGeneratorMock->method('generate')->willReturn('');
-        $fragmentHandlerMock->method('render')->willReturn('');
-        $loaderMock->method('load')->willReturn(new HttpKernelRuntime($fragmentHandlerMock));
+        $loader = $this->getMockBuilder(RuntimeLoaderInterface::class)->getMock();
 
-        $this->twig->addRuntimeLoader($loaderMock);
+        $loader->method('load')->willReturn(new HttpKernelRuntime($fragmentHandler));
+        $this->twig->addRuntimeLoader($loader);
     }
 
     /**

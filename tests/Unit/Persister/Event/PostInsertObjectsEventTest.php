@@ -16,6 +16,7 @@ use FOS\ElasticaBundle\Persister\Event\PostInsertObjectsEvent;
 use FOS\ElasticaBundle\Persister\ObjectPersisterInterface;
 use FOS\ElasticaBundle\Provider\PagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\EventDispatcher\Event as LegacyEvent;
 use Symfony\Contracts\EventDispatcher\Event;
 
 final class PostInsertObjectsEventTest extends TestCase
@@ -24,7 +25,7 @@ final class PostInsertObjectsEventTest extends TestCase
     {
         $rc = new \ReflectionClass(PostInsertObjectsEvent::class);
 
-        $this->assertTrue($rc->isSubclassOf(Event::class));
+        $this->assertTrue($rc->isSubclassOf(class_exists(Event::class) ? Event::class : LegacyEvent::class));
     }
 
     public function testShouldImplementPersistEventInterface()

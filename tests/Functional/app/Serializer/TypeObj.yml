@@ -1,6 +1,9 @@
 FOS\ElasticaBundle\Tests\Functional\TypeObj:
+    exclusion_policy: ALL
     properties:
         field1:
             type: text
-        coll:
-            type: 'array<string>'
+    virtual_properties:
+        getSerializableColl:
+            serialized_name: coll
+            type: array

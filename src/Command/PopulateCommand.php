@@ -30,6 +30,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as LegacyEventDispatcherInterface;
+use Symfony\Component\EventDispatcher\LegacyEventDispatcherProxy;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -40,7 +42,7 @@ class PopulateCommand extends Command
     protected static $defaultName = 'fos:elastica:populate';
 
     /**
-     * @var EventDispatcherInterface
+     * @var EventDispatcherInterface|LegacyEventDispatcherInterface
      */
     private $dispatcher;
 
@@ -70,7 +72,7 @@ class PopulateCommand extends Command
     private $resetter;
 
     public function __construct(
-        EventDispatcherInterface $dispatcher,
+        $dispatcher,
         IndexManager $indexManager,
         PagerProviderRegistry $pagerProviderRegistry,
         PagerPersisterRegistry $pagerPersisterRegistry,
@@ -119,7 +121,7 @@ class PopulateCommand extends Command
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $indexes = (null !== $index = $input->getOption('index')) ? [$index] : \array_keys($this->indexManager->getAllIndexes());
         $type = $input->getOption('type');
@@ -146,12 +148,26 @@ class PopulateCommand extends Command
             /** @var QuestionHelper $dialog */
             $dialog = $this->getHelperSet()->get('question');
             if (!$dialog->ask($input, $output, new Question('<question>You chose to reset the index and start indexing with an offset. Do you really want to do that?</question>'))) {
-                return 1;
+                return 0;
             }
         }
 
         foreach ($indexes as $index) {
             $this->populateIndex($output, $index, $reset, $options);
+        }
+
+        if (null !== $index) {
+            if (null !== $type) {
+                $this->populateIndexType($output, $index, $type, $reset, $options);
+            } else {
+                $this->populateIndex($output, $index, $reset, $options);
+            }
+        } else {
+            $indexes = array_keys($this->indexManager->getAllIndexes());
+
+            foreach ($indexes as $index) {
+                $this->populateIndex($output, $index, $reset, $options);
+            }
         }
 
         return 0;
@@ -162,11 +178,41 @@ class PopulateCommand extends Command
      */
     private function populateIndex(OutputInterface $output, string $index, bool $reset, $options): void
     {
-        $this->dispatcher->dispatch($event = new PreIndexPopulateEvent($index, $reset, $options));
+        $event = new IndexPopulateEvent($index, $reset, $options);
+        $this->dispatch($event, IndexPopulateEvent::PRE_INDEX_POPULATE);
 
         if ($reset = $event->isReset()) {
             $output->writeln(\sprintf('<info>Resetting</info> <comment>%s</comment>', $index));
             $this->resetter->resetIndex($index, true);
+        }
+
+        $types = array_keys($this->pagerProviderRegistry->getIndexProviders($index));
+        foreach ($types as $type) {
+            $this->populateIndexType($output, $index, $type, false, $event->getOptions());
+        }
+
+        $this->dispatch($event, IndexPopulateEvent::POST_INDEX_POPULATE);
+
+        $this->refreshIndex($output, $index);
+    }
+
+    /**
+     * Deletes/remaps an index type, populates it, and refreshes the index.
+     *
+     * @param OutputInterface $output
+     * @param string          $index
+     * @param string          $type
+     * @param bool            $reset
+     * @param array           $options
+     */
+    private function populateIndexType(OutputInterface $output, $index, $type, $reset, $options)
+    {
+        $event = new TypePopulateEvent($index, $type, $reset, $options);
+        $this->dispatch($event, TypePopulateEvent::PRE_TYPE_POPULATE);
+
+        if ($event->isReset()) {
+            $output->writeln(sprintf('<info>Resetting</info> <comment>%s/%s</comment>', $index, $type));
+            $this->resetter->resetIndexType($index, $type);
         }
 
         $offset = 1 < $options['first_page'] ? ($options['first_page'] - 1) * $options['max_per_page'] : 0;
@@ -213,7 +259,7 @@ class PopulateCommand extends Command
 
         $this->pagerPersister->insert($pager, \array_merge($options, ['indexName' => $index]));
 
-        $this->dispatcher->dispatch(new PostIndexPopulateEvent($index, $reset, $options));
+        $this->dispatch($event, TypePopulateEvent::POST_TYPE_POPULATE);
 
         $this->refreshIndex($output, $index);
     }
@@ -226,5 +272,16 @@ class PopulateCommand extends Command
         $output->writeln(\sprintf('<info>Refreshing</info> <comment>%s</comment>', $index));
         $this->indexManager->getIndex($index)->refresh();
         $output->writeln('');
+    }
+
+    private function dispatch($event, $eventName): void
+    {
+        if ($this->dispatcher instanceof EventDispatcherInterface) {
+            // Symfony >= 4.3
+            $this->dispatcher->dispatch($event, $eventName);
+        } else {
+            // Symfony 3.4
+            $this->dispatcher->dispatch($eventName, $event);
+        }
     }
 }

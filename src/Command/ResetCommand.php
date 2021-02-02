@@ -48,7 +48,7 @@ class ResetCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $indexes = (null !== $index = $input->getOption('index')) ? [$index] : \array_keys($this->indexManager->getAllIndexes());
         $force = (bool) $input->getOption('force');
@@ -56,6 +56,21 @@ class ResetCommand extends Command
         foreach ($indexes as $index) {
             $output->writeln(\sprintf('<info>Resetting</info> <comment>%s</comment>', $index));
             $this->resetter->resetIndex($index, false, $force);
+        }
+
+        if (null !== $type) {
+            $output->writeln(sprintf('<info>Resetting</info> <comment>%s/%s</comment>', $index, $type));
+            $this->resetter->resetIndexType($index, $type);
+        } else {
+            $indexes = null === $index
+                ? array_keys($this->indexManager->getAllIndexes())
+                : [$index]
+            ;
+
+            foreach ($indexes as $index) {
+                $output->writeln(sprintf('<info>Resetting</info> <comment>%s</comment>', $index));
+                $this->resetter->resetIndex($index, false, $force);
+            }
         }
 
         return 0;

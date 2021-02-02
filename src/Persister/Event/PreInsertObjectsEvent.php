@@ -11,11 +11,11 @@
 
 namespace FOS\ElasticaBundle\Persister\Event;
 
+use FOS\ElasticaBundle\Event\AbstractEvent;
 use FOS\ElasticaBundle\Persister\ObjectPersisterInterface;
 use FOS\ElasticaBundle\Provider\PagerInterface;
-use Symfony\Contracts\EventDispatcher\Event;
 
-final class PreInsertObjectsEvent extends Event implements PersistEvent
+final class PreInsertObjectsEvent extends AbstractEvent implements PersistEvent
 {
     /**
      * @var PagerInterface
