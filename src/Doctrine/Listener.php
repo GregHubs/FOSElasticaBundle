@@ -255,3 +255,5 @@ class Listener
         );
     }
 }
+
+class_exists(LifecycleEventArgs::class);

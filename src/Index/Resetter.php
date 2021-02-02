@@ -12,8 +12,11 @@
 namespace FOS\ElasticaBundle\Index;
 
 use FOS\ElasticaBundle\Configuration\ManagerInterface;
-use FOS\ElasticaBundle\Event\PostIndexResetEvent;
-use FOS\ElasticaBundle\Event\PreIndexResetEvent;
+use Elastica\Client;
+use FOS\ElasticaBundle\Event\IndexResetEvent;
+use FOS\ElasticaBundle\Event\TypeResetEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as LegacyEventDispatcherInterface;
+use Symfony\Component\EventDispatcher\LegacyEventDispatcherProxy;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -32,7 +35,7 @@ class Resetter implements ResetterInterface
     private $configManager;
 
     /**
-     * @var EventDispatcherInterface
+     * @var EventDispatcherInterface|LegacyEventDispatcherInterface
      */
     private $dispatcher;
 
@@ -46,12 +49,20 @@ class Resetter implements ResetterInterface
      */
     private $mappingBuilder;
 
+    /**
+     * @param ManagerInterface                                        $configManager
+     * @param IndexManager                                            $indexManager
+     * @param AliasProcessor                                          $aliasProcessor
+     * @param MappingBuilder                                          $mappingBuilder
+     * @param EventDispatcherInterface|LegacyEventDispatcherInterface $eventDispatcher
+     * @param Client                                                  $client
+     */
     public function __construct(
         ManagerInterface $configManager,
         IndexManager $indexManager,
         AliasProcessor $aliasProcessor,
         MappingBuilder $mappingBuilder,
-        EventDispatcherInterface $eventDispatcher
+        /* EventDispatcherInterface */ $eventDispatcher
     ) {
         $this->aliasProcessor = $aliasProcessor;
         $this->configManager = $configManager;
@@ -85,7 +96,8 @@ class Resetter implements ResetterInterface
             $this->aliasProcessor->setRootName($indexConfig, $index);
         }
 
-        $this->dispatcher->dispatch($event = new PreIndexResetEvent($indexName, $populating, $force));
+        $event = new IndexResetEvent($indexName, $populating, $force);
+        $this->dispatch($event, IndexResetEvent::PRE_INDEX_RESET);
 
         $mapping = $this->mappingBuilder->buildIndexMapping($indexConfig);
         $index->create($mapping, ['recreate' => true]);
@@ -94,7 +106,38 @@ class Resetter implements ResetterInterface
             $this->aliasProcessor->switchIndexAlias($indexConfig, $index, $force);
         }
 
-        $this->dispatcher->dispatch(new PostIndexResetEvent($indexName, $populating, $force));
+        $this->dispatch($event, IndexResetEvent::POST_INDEX_RESET);
+    }
+
+    /**
+     * Deletes and recreates a mapping type for the named index.
+     *
+     * @param string $indexName
+     * @param string $typeName
+     *
+     * @throws \InvalidArgumentException if no index or type mapping exists for the given names
+     * @throws ResponseException
+     */
+    public function resetIndexType($indexName, $typeName)
+    {
+        $typeConfig = $this->configManager->getTypeConfiguration($indexName, $typeName);
+
+        $this->resetIndex($indexName, true);
+
+        $index = $this->indexManager->getIndex($indexName);
+        $type = $index->getType($typeName);
+
+        $event = new TypeResetEvent($indexName, $typeName);
+        $this->dispatch($event, TypeResetEvent::PRE_TYPE_RESET);
+
+        $mapping = new Mapping();
+        foreach ($this->mappingBuilder->buildTypeMapping($typeConfig) as $name => $field) {
+            $mapping->setParam($name, $field);
+        }
+
+        $type->setMapping($mapping);
+
+        $this->dispatch($event, TypeResetEvent::POST_TYPE_RESET);
     }
 
     /**
@@ -109,6 +152,17 @@ class Resetter implements ResetterInterface
         if ($indexConfig->isUseAlias()) {
             $index = $this->indexManager->getIndex($indexName);
             $this->aliasProcessor->switchIndexAlias($indexConfig, $index, false, $delete);
+        }
+    }
+
+    private function dispatch($event, $eventName): void
+    {
+        if ($this->dispatcher instanceof EventDispatcherInterface) {
+            // Symfony >= 4.3
+            $this->dispatcher->dispatch($event, $eventName);
+        } else {
+            // Symfony 3.4
+            $this->dispatcher->dispatch($eventName, $event);
         }
     }
 }
